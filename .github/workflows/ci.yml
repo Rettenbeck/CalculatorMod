@@ -1,4 +1,4 @@
-name: ty
+name: CI
 
 on: [push, pull_request]
 
@@ -6,28 +6,29 @@ permissions:
   contents: read
 
 jobs:
-  ty:
-    name: Type-Check Python
-    runs-on: ubuntu-latest
+  lint-and-test:
+    name: Lint And Test
+    runs-on: windows-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 9.0.x
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
-      # https://github.com/astral-sh/setup-uv
       - name: Set up uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
 
-      - name: Install dependencies
-        run: uv sync --dev --locked
+      - name: Restore .NET tools
+        run: dotnet tool restore
 
-      - name: Run ty
-        run: uv run ty check .
-
-      - name: Check formatting
-        run: uv run black . --check --target-version py314
+      - name: Run lint and tests
+        run: bash lint-and-test.sh

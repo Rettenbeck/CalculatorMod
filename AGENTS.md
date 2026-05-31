@@ -1,10 +1,17 @@
 # AGENTS.md
 
+## General
+
 - Read the README.md to get an overview for what this project is.
 - Whenever you edit a Markdown file, format it afterward with: `bunx --bun prettier --write foo.md`
 - Whenever you edit a Python file, format it afterward with: `uv run black --target-version py314 foo.py`
 - To validate code changes, run the combined lint/test script: `bash lint-and-test.sh`
 - For `Sts2RunEnv` run-level reward logic, prefer decompiled source under `decompiled\` (for example `PotionRewardOdds`, `PotionFactory`, and merchant entry classes) over inferred deterministic shortcuts.
+- Full-run replay diagnostics should report available boundary diffs before stopping on unsupported trace actions, and unsupported action errors should include the reference step, state type, and floor.
+- Full-run replay may coalesce live reward/event substeps as no-ops when `Sts2RunEnv` has already applied those rewards or advanced to map, so retained traces continue to the next meaningful mismatch.
+
+## Code Organization
+
 - Native card effects that cause player HP loss should use `CardEffects.LoseHp` so Rupture and Inferno hooks stay consistent with other card-effect self-damage.
 - Native card effects that exhaust another card from hand should select from `state.Hand` after the played card has already been removed, then call `CardEffects.ExhaustCard` so exhaust hooks stay consistent.
 - Native card effects that upgrade hand cards should replace `CardInstance` values in `state.Hand` with upgraded copies; the played card has already been removed before `CardEffects.Apply` runs.
@@ -28,8 +35,6 @@
 - Native cards that apply temporary enemy Strength loss should consume Artifact before applying paired `Strength` and `TemporaryStrength` buffs, then restore the enemy Strength in `EnemyAI.ExecuteIntent` at that enemy's turn end.
 - Native card powers that modify a played card's destination pile should make that decision in `CombatEngine` after effects resolve but before adding the card to discard.
 - Native card powers with extra dynamic variables can be represented with companion `BuffId` entries when `BuffState` needs to track both the visible counter and hidden per-power state.
-- Full-run replay diagnostics should report available boundary diffs before stopping on unsupported trace actions, and unsupported action errors should include the reference step, state type, and floor.
-- Full-run replay may coalesce live reward/event substeps as no-ops when `Sts2RunEnv` has already applied those rewards or advanced to map, so retained traces continue to the next meaningful mismatch.
 
 ## STS2MCP
 
@@ -37,7 +42,8 @@
 - Sometimes, we might need to update the mod in order to add/fix API functionality. If we make updates to the mod, we need to:
   - Recompile the mod.
   - Close the running Slay the Spire 2 instance, if it is running.
-  - Copy over the DLL files to this directory: `C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2\mods`
+  - Copy over the DLL files to this directory: `C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2\mods`-
+- If you need to make a trace from an in-game replay, you can use the `start_replay` API that we added to STS2MCP.
 
 ## Slay the Spire 2 Launch Instructions
 

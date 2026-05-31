@@ -65,7 +65,7 @@ The current combat factory starts an Ironclad-style combat with:
 - Initial native relic combat effects for Anchor, Bag of Marbles, Bag of Preparation, Blood Vial, Bronze Scales, Captain's Wheel, Happy Flower, Horn Cleat, Lantern, Oddly Smooth Stone, Orichalcum, Red Skull, Venerable Tea Set, and Vajra, with run-level HP, potions, and relics passed into native combat.
 - Secondary intent metadata for known mixed attack+buff/debuff enemy moves is exposed in the reserved observation area.
 
-This is not yet a full game emulator. Full decompiled map generation, exact Neow/shop/reward/event odds, broad native relic coverage, and expanded trace parity are still future work.
+This is not yet a full game emulator. Exact Neow/shop/reward/event odds, broad native relic coverage, and expanded trace parity are still future work.
 
 ## Requirements
 

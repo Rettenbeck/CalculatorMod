@@ -1,0 +1,161 @@
+# This is the configuration file for Ruff, a Python linter:
+# https://docs.astral.sh/ruff/
+
+# We must enable preview mode to use "DOC" rules.
+# https://docs.astral.sh/ruff/preview/
+preview = true
+
+[lint]
+
+# We enable specific lint rules:
+# https://docs.astral.sh/ruff/rules/
+# We take a blacklist approach instead of a whitelist approach in order to maximize the amount of
+# bug coverage. Rule categories are listed in order of how they appear on the Ruff website.
+select = [
+  "AIR",   # Airflow
+  "ERA",   # eradicate
+  "FAST",  # FastAPI
+  "YTT",   # flake8-2020
+  "ANN",   # flake8-annotations
+  "ASYNC", # flake8-async
+  "S",     # flake8-bandit
+  "BLE",   # flake8-blind-except
+  "FBT",   # flake8-boolean-trap
+  "B",     # flake8-bugbear
+  "A",     # flake8-builtins
+  "COM",   # flake8-commas
+  "C4",    # flake8-comprehensions
+  "CPY",  # flake8-copyright
+  "DTZ",  # flake8-datetimez
+  "T10",  # flake8-debugger
+  "DJ",   # flake8-django
+  "EM",   # flake8-errmsg
+  "EXE",  # flake8-executable
+  "FIX",  # flake8-fixme
+  "FA",   # flake8-future-annotations
+  "INT",  # flake8-gettext
+  "ISC",  # flake8-implicit-str-concat
+  "ICN",  # flake8-import-conventions
+  "LOG",  # flake8-logging
+  "G",    # flake8-logging-format
+  "INP",  # flake8-no-pep420
+  "PIE",  # flake8-pie
+  "T20",  # flake8-print
+  "PYI",  # flake8-pyi
+  "PT",   # flake8-pytest-style
+  "Q",    # flake8-quotes
+  "RSE",  # flake8-raise
+  "RET",  # flake8-return
+  "SLF",  # flake8-self
+  "SIM",  # flake8-simplify
+  "SLOT", # flake8-slots
+  "TID",  # flake8-tidy-imports
+  "TD",   # flake8-todos
+  "TC",   # flake8-type-checking
+  "ARG",  # flake8-unused-arguments
+  "PTH",  # flake8-use-pathlib
+  "FLY",  # flynt
+  "I",    # isort
+  "C90",  # mccabe
+  "NPY",  # NumPy-specific rules
+  "PD",   # pandas-vet
+  "N",    # pep8-naming
+  "PERF", # Perflint
+  "E",    # pycodestyle
+  "W",    # pycodestyle
+  "DOC",  # pydoclint
+  "D",    # pydocstyle
+  "F",    # Pyflakes
+  "PGH",  # pygrep-hooks
+  "PL",   # Pylint
+  "PLE",  # Error
+  "PLR",  # Refactor
+  "PLW",  # Warning
+  "UP",   # pyupgrade
+  "FURB", # refurb
+  "RUF",  # Ruff-specific rules
+  "TRY",  # tryceratops
+]
+
+# Rules are listed in alphabetical order.
+ignore = [
+  # complex-structure (C901)
+  # https://docs.astral.sh/ruff/rules/complex-structure/
+  # Lint rules based on cyclomatic complexity are notorious for making the quality of a codebase
+  # worse, since the naive fix is to arbitrarily break up a big function into a smaller function,
+  # violating the principal of Locality of Behavior.
+  "C901",
+
+  # undocumented-public-module (D100)
+  # https://docs.astral.sh/ruff/rules/undocumented-public-module/
+  # Requiring comments for self-documenting code is pointless.
+  "D100",
+
+  # undocumented-public-class (D101)
+  # https://docs.astral.sh/ruff/rules/undocumented-public-class/
+  # See the comment for D100.
+  "D101",
+
+  # undocumented-public-method (D102)
+  # https://docs.astral.sh/ruff/rules/undocumented-public-method/
+  # See the comment for D100.
+  "D102",
+
+  # undocumented-public-function (D103)
+  # https://docs.astral.sh/ruff/rules/undocumented-public-function/
+  # See the comment for D100.
+  "D103",
+
+  # undocumented-public-package (D104)
+  # https://docs.astral.sh/ruff/rules/undocumented-public-package/
+  # See the comment for D100.
+  "D104",
+
+  # undocumented-magic-method (D105)
+  # https://docs.astral.sh/ruff/rules/undocumented-magic-method/
+  # See the comment for D100.
+  "D105",
+
+  # undocumented-public-nested-class (D106)
+  # https://docs.astral.sh/ruff/rules/undocumented-public-nested-class/
+  # See the comment for D100.
+  "D106",
+
+  # undocumented-public-init (D107)
+  # https://docs.astral.sh/ruff/rules/undocumented-public-init/
+  # See the comment for D100.
+  "D107",
+
+  # incorrect-blank-line-before-class (D203)
+  # https://docs.astral.sh/ruff/rules/incorrect-blank-line-before-class/
+  # This rule is incompatible with D211 and violates PEP 257. It is considered a legacy rule.
+  "D203",
+
+  # multi-line-summary-second-line (D213)
+  # https://docs.astral.sh/ruff/rules/multi-line-summary-second-line/
+  # This rule is incompatible with D212. Since both rules are PEP 257 compliant, we prefer by the
+  # Google style guide over the NumPy style guide.
+  "D213",
+
+  # docstring-missing-returns (DOC201)
+  # https://docs.astral.sh/ruff/rules/docstring-missing-returns/
+  # See the comment for D100.
+  "DOC201",
+
+  # Line contains TODO
+  # https://docs.astral.sh/ruff/rules/line-contains-todo/
+  "FIX002",
+
+  # print (T201)
+  # https://docs.astral.sh/ruff/rules/print/
+  # We do not want to outlaw print statements, as not all scripts will have logging frameworks.
+  "T201",
+
+  # Missing author in TODO
+  # https://docs.astral.sh/ruff/rules/missing-todo-author/
+  "TD002",
+
+  # Missing issue link for TODO
+  # https://docs.astral.sh/ruff/rules/missing-todo-link/
+  "TD003",
+]

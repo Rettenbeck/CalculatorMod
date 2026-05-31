@@ -25,10 +25,11 @@ Keep expanding `Sts2RunEnv` and combat parity so new RunReplays traces can be re
 - Resolved: generated cards from other class pools now route through native behavior instead of inert fallback; all non-explicit generated Attacks, Skills, and Powers with no base damage/block have deterministic native effects.
 - Resolved: Act 1 Overgrowth and Underdocks event pools now include modeled event IDs instead of dropping unimplemented events from generation.
 - Resolved: first-pass event effects are modeled for Dense Vegetation, Luminous Choir, Sapphire Seed, Sunken Statue, Tablet of Truth, Wellspring, Whispering Hollow, Wood Carvings, Abyssal Baths, Drowning Beacon, Endless Conveyor, Punch-Off, Spiraling Whirlpool, Trash Heap, and Waterlogged Scriptorium.
+- Resolved: Act map generation now uses the seed-specific act map RNG, decompiled-style path post-processing, duplicate-segment pruning, and unknown-room odds instead of a trace-observed fixed Act 1 map.
 
 ## Validation
 
 - Format Markdown changes with `bunx --bun prettier --write plan.md`.
 - Format Python changes with `black --target-version py314 <file>`.
 - Run `bash lint-and-test.sh` after code changes. If Git Bash cannot find `uv`, run the same commands from PowerShell and note that fallback.
-- Latest validation: Git Bash still cannot find `uv`; the equivalent PowerShell validation commands passed.
+- Latest validation: Git Bash still cannot find `uv`; the equivalent PowerShell checks pass through build, publish, Python unit tests, and run-env smoke checks, but xUnit currently fails three combat behavior tests plus `ShopGenerationAndPurchaseUseNativeRunState`.

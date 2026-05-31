@@ -7,7 +7,7 @@ namespace Sts2Emulator.Interop;
 
 public static class RunNativeExports
 {
-    public const int RUN_NATIVE_API_VERSION = 7;
+    public const int RUN_NATIVE_API_VERSION = 8;
     private static readonly RunEngine?[] _pool = new RunEngine?[256];
 
     public static int Sts2Run_NativeApiVersion() => RUN_NATIVE_API_VERSION;
@@ -155,6 +155,9 @@ public static class RunNativeExports
             5 => WriteBoolArray(run.State.RewardUpgraded, output),
             6 => WriteRewardList(run.State, output),
             7 => WriteMapOptionCoords(run.State, output),
+            8 => WriteIntArray(run.State.ShopCards, output),
+            9 => WriteIntArray(run.State.ShopRelics, output),
+            10 => WriteIntArray(run.State.ShopPotions, output),
             _ => -3,
         };
     }

@@ -199,6 +199,17 @@ public static class CombatEngine
         }
 
         Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
+        AutoPlayStampedeAttacks(state, rng);
+        HandleEnemyDeaths(state, enemyHpsBefore, rng);
+        bool allDeadAfterEndTurnPowers = state.Enemies.All(e => e.Hp <= 0);
+        if (allDeadAfterEndTurnPowers)
+        {
+            return new StepResult(
+                Terminal: true,
+                PlayerWon: true,
+                Reward: ComputeReward(state, false, true, playerHpBefore, enemyHpsBefore)
+            );
+        }
 
         // Tick player debuffs at end of player turn (Vulnerable etc. tick down).
         BuffSystem.TickEndOfTurn(state.PlayerBuffs);
@@ -508,7 +519,6 @@ public static class CombatEngine
         }
 
         AutoPlayMayhemCards(state, rng);
-        AutoPlayStampedeAttacks(state, rng);
 
         // Enemies choose their next intent.
         EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng, state.AiRng);
@@ -604,6 +614,11 @@ public static class CombatEngine
         }
 
         if (def.Id == Effects.IC.Nostalgia && card.Upgraded)
+        {
+            cost -= 1;
+        }
+
+        if (def.Id == Effects.IC.Stampede && card.Upgraded)
         {
             cost -= 1;
         }

@@ -5,6 +5,7 @@
 __pycache__/
 node_modules/
 out/
+tmp/
 
 # Generated captures can be large and are usually superseded quickly.
 # Keep only curated trace fixtures intentionally.

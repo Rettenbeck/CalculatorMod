@@ -57,6 +57,12 @@ public sealed class RunState
     public int PendingSelfHelpBookEnchantType;
     public bool PendingRestUpgrade;
     public bool RestResultPending;
+    public int UnknownMapPointsVisited;
+    public double UnknownMapPointMonsterOdds = 0.1;
+    public double UnknownMapPointEliteOdds = -1.0;
+    public double UnknownMapPointTreasureOdds = 0.02;
+    public double UnknownMapPointShopOdds = 0.03;
+    public int LastResolvedRoomType = RunConstants.NodeNone;
 }
 
 public sealed class RunMapNode

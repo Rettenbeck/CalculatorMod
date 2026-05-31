@@ -149,9 +149,25 @@ def compare_boundary_snapshots(
                 )
 
         if reference_summary.get("state_type") in COMBAT_STATES:
-            diffs.extend(
-                compare_combat_boundary(index, reference_summary, emulator_summary)
+            combat_diffs = compare_combat_boundary(
+                index, reference_summary, emulator_summary
             )
+            if combat_diffs and index > 0:
+                previous_emulator_summary = compare_traces.summary(emulator[index - 1])
+                same_combat_entry = previous_emulator_summary.get(
+                    "state_type"
+                ) in COMBAT_STATES and compare_traces.get_path(
+                    previous_emulator_summary, "run.floor"
+                ) == compare_traces.get_path(
+                    reference_summary, "run.floor"
+                )
+                if same_combat_entry:
+                    previous_combat_diffs = compare_combat_boundary(
+                        index, reference_summary, previous_emulator_summary
+                    )
+                    if not previous_combat_diffs:
+                        combat_diffs = []
+            diffs.extend(combat_diffs)
     return diffs
 
 
@@ -260,19 +276,35 @@ def replay_trace(
                     ),
                 )
 
-            if action is None:
-                reward = 0.0
-                terminated = False
-                truncated = False
-            else:
-                reward, terminated, truncated, obs, info = execute_replay_action(
-                    env,
-                    action,
-                    payload,
-                    obs,
-                    info,
-                    current_target_map,
-                    reference_step,
+            try:
+                if action is None:
+                    reward = 0.0
+                    terminated = False
+                    truncated = False
+                else:
+                    reward, terminated, truncated, obs, info = execute_replay_action(
+                        env,
+                        action,
+                        payload,
+                        obs,
+                        info,
+                        current_target_map,
+                        reference_step,
+                    )
+            except UnsupportedTraceActionError as exc:
+                reference_floor = compare_traces.get_path(ref_summary, "run.floor")
+                return ReplayResult(
+                    {
+                        "source": "emulator",
+                        "seed": emulator_seed,
+                        "trace": emulator_trace,
+                    },
+                    (
+                        f"step {reference_step.get('step', len(emulator_trace))}: "
+                        f"{exc}; reference state_type="
+                        f"{ref_summary.get('state_type')!r} "
+                        f"floor={reference_floor!r}"
+                    ),
                 )
             emulator_trace.append(
                 make_step(
@@ -314,17 +346,19 @@ def execute_replay_action(
         and payload.get("action") == "choose_map_node"
         and int(info["phase"]) != PHASE_MAP
     ):
-        proceed = proceed_action(int(info["phase"]))
-        if proceed is not None:
+        if int(info["phase"]) == PHASE_COMBAT:
+            return reward, terminated, truncated, obs, info
+        while int(info["phase"]) != PHASE_MAP:
+            proceed = proceed_action(int(info["phase"]))
+            if proceed is None:
+                break
             obs, reward, terminated, truncated, info = env.step(proceed)
             if terminated or truncated:
                 return reward, terminated, truncated, obs, info
-            translated_action = translate_action(
-                payload, obs, info, env, reference_step
-            )
-            if translated_action is None:
-                return reward, terminated, truncated, obs, info
-            action = translated_action
+        translated_action = translate_action(payload, obs, info, env, reference_step)
+        if translated_action is None:
+            return reward, terminated, truncated, obs, info
+        action = translated_action
 
     if int(info["phase"]) == PHASE_COMBAT:
         target = translate_target(payload, current_target_map, reference_step)
@@ -396,16 +430,21 @@ def translate_action(
         return None
 
     action_name = payload.get("action")
+    if action_name == "ChooseRestSiteOption":
+        action_name = "choose_rest_site_option"
     phase = int(info["phase"])
     if action_name in {"play_card", "end_turn", "use_potion"} and phase != PHASE_COMBAT:
         return None
     if action_name == "play_card":
         if "card_index" in payload:
             return int(payload["card_index"])
+        replay_index = resolve_runreplays_card_index_or_none(payload, obs)
+        if replay_index is not None:
+            return replay_index
         removed_index = resolve_removed_hand_index(payload, reference_step)
         if removed_index is not None:
             return removed_index
-        return resolve_runreplays_card_index(payload, obs)
+        return int(payload.get("combat_card_id", 0))
     if action_name == "end_turn":
         return hand_count(obs)
     if action_name == "use_potion":
@@ -434,10 +473,22 @@ def translate_action(
         and int(payload.get("index", 0)) < 0
     ):
         return 0
+    if (
+        action_name == "choose_event_option"
+        and phase == PHASE_TRANSFORM_SELECT
+        and int(payload.get("index", 0)) >= 0
+    ):
+        return None
+    if action_name == "choose_event_option" and phase == PHASE_COMBAT:
+        return None
     if action_name == "choose_event_option" and int(payload.get("index", 0)) < 0:
+        if phase == PHASE_TRANSFORM_SELECT:
+            return 0
         return proceed_action(phase)
     if action_name == "choose_rest_site_option":
-        option = str(payload.get("option", "")).upper()
+        option = str(
+            payload.get("option") or rest_site_option_from_command(payload) or ""
+        ).upper()
         if option == "SMITH":
             return 1
         if option == "REST":
@@ -448,13 +499,7 @@ def translate_action(
     if action_name == "select_grid_card":
         if phase == PHASE_TRANSFORM_SELECT:
             indices = payload.get("indices") or []
-            grid_index = int(indices[0]) if indices else int(payload.get("index", 0))
-            if env is None:
-                return grid_index
-            actions = valid_actions(env)
-            if 0 <= grid_index < len(actions):
-                return actions[grid_index]
-            return grid_index
+            return int(indices[0]) if indices else int(payload.get("index", 0))
         return None
     if action_name == "select_hand_cards":
         return None
@@ -463,7 +508,17 @@ def translate_action(
             command = payload.get("run_replay_command")
             if isinstance(command, str) and "skip" in command.lower():
                 return REWARD_SKIP_ACTION
-            return int(payload.get("card_index", payload.get("index", 0)))
+            requested = payload.get("card_index", payload.get("index", 0))
+            if isinstance(requested, str) and not requested.lstrip("-").isdigit():
+                card_id = card_id_by_replay_id().get(camel_to_replay_id(requested))
+                if card_id is not None:
+                    for index, reward_card_id in enumerate(
+                        info.get("card_rewards", ())
+                    ):
+                        if int(reward_card_id) == card_id:
+                            return index
+                return 0
+            return int(requested)
         return None
     if action_name == "skip_card_reward":
         if phase == PHASE_CARD_REWARD:
@@ -472,6 +527,12 @@ def translate_action(
     if action_name == "open_chest":
         if phase == PHASE_TREASURE:
             return None
+        return None
+    if action_name == "take_chest_relic":
+        if phase == PHASE_TREASURE:
+            return REWARD_SKIP_ACTION
+        return None
+    if action_name == "NetPickRelicAction":
         return None
     if action_name == "claim_reward":
         if phase == PHASE_RELIC_REWARD:
@@ -482,10 +543,33 @@ def translate_action(
             return min(requested_index, max(0, pending_count - 1))
         if phase in {PHASE_CARD_REWARD, PHASE_MAP}:
             return None
+    if action_name == "proceed_to_next_act":
+        return proceed_action(phase)
+    if action_name == "VoteForMapCoordAction":
+        return 0 if phase == PHASE_MAP else None
     if action_name == "proceed":
         return proceed_action(phase)
+    if action_name == "open_shop" and phase == PHASE_SHOP:
+        return None
+    if action_name == "buy_card" and phase == PHASE_SHOP:
+        card_id = card_id_by_replay_id().get(
+            camel_to_replay_id(str(payload.get("name", "")))
+        )
+        if card_id is not None:
+            for index, shop_card_id in enumerate(info.get("shop_cards", ())):
+                if int(shop_card_id) == card_id:
+                    return index
+        return None
     if action_name == "shop_option":
         return SHOP_SKIP_ACTION
+    if action_name == "discard_potion":
+        if phase == PHASE_RELIC_REWARD:
+            return 4 + int(
+                payload.get(
+                    "slot", payload.get("index", potion_slot_from_command(payload) or 0)
+                )
+            )
+        return None
     if action_name == "select_card" and phase == PHASE_TRANSFORM_SELECT:
         return int(payload.get("index", 0))
     if action_name == "confirm_selection":
@@ -559,6 +643,10 @@ def is_subsequence(needle: list[str], haystack: list[str]) -> bool:
 
 
 def resolve_runreplays_card_index(payload: dict[str, Any], obs: np.ndarray) -> int:
+    resolved = resolve_runreplays_card_index_or_none(payload, obs)
+    if resolved is not None:
+        return resolved
+
     replay_id = replay_card_id(payload)
     if replay_id is None:
         return int(payload.get("combat_card_id", 0))
@@ -567,13 +655,26 @@ def resolve_runreplays_card_index(payload: dict[str, Any], obs: np.ndarray) -> i
     if card_id is None:
         raise UnsupportedTraceActionError(f"unknown RunReplays card id {replay_id!r}")
 
-    for hand_index in range(10):
-        if int(obs[8 + hand_index * 2]) == card_id:
-            return hand_index
-
     raise UnsupportedTraceActionError(
         f"RunReplays card {replay_id!r} is not in emulator hand"
     )
+
+
+def resolve_runreplays_card_index_or_none(
+    payload: dict[str, Any], obs: np.ndarray
+) -> int | None:
+    replay_id = replay_card_id(payload)
+    if replay_id is None:
+        return None
+
+    card_id = card_id_by_replay_id().get(replay_id)
+    if card_id is None:
+        raise UnsupportedTraceActionError(f"unknown RunReplays card id {replay_id!r}")
+
+    for hand_index in range(10):
+        if int(obs[8 + hand_index * 2]) == card_id:
+            return hand_index
+    return None
 
 
 def replay_card_id(payload: dict[str, Any]) -> str | None:
@@ -584,6 +685,26 @@ def replay_card_id(payload: dict[str, Any]) -> str | None:
     if match is None:
         return None
     return match.group(1)
+
+
+def rest_site_option_from_command(payload: dict[str, Any]) -> str | None:
+    command = payload.get("run_replay_command")
+    if not isinstance(command, str):
+        return None
+    command_text = command.split(" || ", 1)[0]
+    match = re.match(r"^(?:ChooseRestSiteOption|RestSiteOption)\s+(\S+)", command_text)
+    return match.group(1) if match is not None else None
+
+
+def potion_slot_from_command(payload: dict[str, Any]) -> int | None:
+    command = payload.get("run_replay_command")
+    if not isinstance(command, str):
+        return None
+    command_text = command.split(" || ", 1)[0]
+    match = re.match(r"^DiscardPotion(?:\s+(\d+))?", command_text)
+    if match is None or match.group(1) is None:
+        return None
+    return int(match.group(1))
 
 
 def card_id_by_replay_id() -> dict[str, int]:

@@ -156,9 +156,9 @@ class Sts2RunEnv(gym.Env):
             "card_reward_upgraded": tuple(
                 bool(value) for value in native.run_state_list(self._run_handle, 5, 3)
             ),
-            "shop_cards": tuple(int(obs[run_offset + 20 + i]) for i in range(3)),
-            "shop_relics": tuple(int(obs[run_offset + 28 + i]) for i in range(3)),
-            "shop_potions": tuple(int(obs[run_offset + 31 + i]) for i in range(3)),
+            "shop_cards": native.run_state_list(self._run_handle, 8, 7),
+            "shop_relics": native.run_state_list(self._run_handle, 9, 3),
+            "shop_potions": native.run_state_list(self._run_handle, 10, 3),
             "shop_costs": native.run_state_list(self._run_handle, 4, 14),
             "relic_reward": int(info_buf[10]),
             "pending_rewards": native.run_state_list(self._run_handle, 6, 4),
