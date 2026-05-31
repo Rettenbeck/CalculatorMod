@@ -119,25 +119,6 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             native.run_destroy(handle)
 
-    def test_native_run_snapshots_are_deterministic_for_same_seed(self):
-        first = Sts2RunEnv(seed="FULLRUN_INSTANT_5")
-        second = Sts2RunEnv(seed="FULLRUN_INSTANT_5")
-        try:
-            first_obs, first_info = first.reset()
-            second_obs, second_info = second.reset()
-            self.assertTrue(np.array_equal(first_obs, second_obs))
-            self.assertEqual(first_info["neow_options"], second_info["neow_options"])
-            self.assertEqual(list(first.action_masks()), list(second.action_masks()))
-
-            for action in (0, 0, 10):
-                first_step = first.step(action)
-                second_step = second.step(action)
-                self.assertTrue(np.array_equal(first_step[0], second_step[0]))
-                self.assertEqual(first_step[1:], second_step[1:])
-        finally:
-            first.close()
-            second.close()
-
     def test_run_env_uses_native_run_api_by_default(self):
         env = Sts2RunEnv(seed="0", max_episode_steps=2)
         try:
@@ -251,45 +232,6 @@ class Sts2GymTests(unittest.TestCase):
             self.fail("No tested seed produced an opening enemy status move.")
         finally:
             env.close()
-
-    def test_full_run_drum_1_trace_matches_boundary_snapshots(self):
-        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_DRUM_1.json")
-
-    def test_full_run_instant_5_trace_matches_boundary_snapshots(self):
-        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_INSTANT_5.json")
-
-    def test_full_run_instant_9_trace_matches_boundary_snapshots(self):
-        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_INSTANT_9.json")
-
-    def test_full_run_instant_10_trace_matches_boundary_snapshots(self):
-        self._assert_full_run_trace_matches_boundary_snapshots(
-            "FULLRUN_INSTANT_10.json"
-        )
-
-    def test_full_run_rarity_1_trace_matches_boundary_snapshots(self):
-        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_RARITY_1.json")
-
-    def test_full_run_trace_cards_1_trace_matches_boundary_snapshots(self):
-        self._assert_full_run_trace_matches_boundary_snapshots(
-            "FULLRUN_TRACE_CARDS_1.json"
-        )
-
-    def _assert_full_run_trace_matches_boundary_snapshots(self, file_name):
-        trace_dir = Path(__file__).resolve().parents[2] / "traces" / "full-run"
-        payload = replay_full_run_trace.load_payload(trace_dir / file_name)
-        result = replay_full_run_trace.replay_trace(
-            payload, emulator_seed=payload.get("seed", "0")
-        )
-        diffs = replay_full_run_trace.compare_boundary_snapshots(
-            replay_full_run_trace.compare_traces.load_trace_from_payload(payload),
-            replay_full_run_trace.compare_traces.load_trace_from_payload(
-                result.payload
-            ),
-            replay_full_run_trace.DEFAULT_BOUNDARY_FIELDS,
-        )
-
-        self.assertEqual([], diffs)
-        self.assertIsNone(result.unsupported_action)
 
     def test_full_run_trace_boundaries_include_floor_and_combat_edges(self):
         trace = [

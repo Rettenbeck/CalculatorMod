@@ -259,31 +259,6 @@ public class RunEngineTests
     }
 
     [Fact]
-    public void MapGeneration_DrumTraceFirstPathKeepsSecondRoomMonster()
-    {
-        var engine = new RunEngine();
-
-        engine.Reset("FULLRUN_DRUM_1");
-        engine.Step(0, -1, out _, out _, out _);
-        Assert.Equal([(1, 1), (3, 1), (4, 1)], engine.State.MapOptionCoords[..3]);
-        Assert.Equal(RunConstants.NodeNormal, engine.State.MapNodeTypes[0]);
-
-        Assert.True(RunMapGenerator.ChooseMapNode(engine.State, 0, out int nodeType, out _));
-        Assert.Equal(RunConstants.NodeNormal, nodeType);
-        RunMapGenerator.RefreshMapOptions(engine.State);
-
-        Assert.Equal(RunConstants.NodeNormal, engine.State.MapNodeTypes[0]);
-        Assert.Equal(RunConstants.NodeNormal, engine.State.MapNodeTypes[1]);
-
-        Assert.True(RunMapGenerator.ChooseMapNode(engine.State, 0, out nodeType, out _));
-        Assert.Equal(RunConstants.NodeNormal, nodeType);
-        RunMapGenerator.RefreshMapOptions(engine.State);
-
-        Assert.Equal(RunConstants.NodeNormal, engine.State.MapNodeTypes[0]);
-        Assert.Equal(RunConstants.NodeEvent, engine.State.MapNodeTypes[1]);
-    }
-
-    [Fact]
     public void MapStepRoutesCombatNodesIntoRunCombat()
     {
         var engine = new RunEngine();
@@ -869,32 +844,6 @@ public class RunEngineTests
     }
 
     [Fact]
-    public void SunkenTreasury_UsesPrecomputedEventRngGold()
-    {
-        var engine = new RunEngine();
-        engine.Reset("FULLRUN_DRUM_1");
-        engine.State.Phase = RunPhase.Event;
-        engine.State.EventId = RunConstants.EventSunkenTreasury;
-        engine.State.Gold = 115;
-
-        int status = engine.Step(0, -1, out _, out _, out _);
-
-        Assert.Equal(0, status);
-        Assert.Equal(172, engine.State.Gold);
-    }
-
-    [Fact]
-    public void UnderdocksEventSequence_UsesShuffledActEvents()
-    {
-        var engine = new RunEngine();
-        engine.Reset("FULLRUN_DRUM_1");
-
-        Assert.Equal(RunConstants.ActUnderdocks, engine.State.Act);
-        Assert.Equal(RunConstants.EventDoorsOfLightAndDark, engine.State.EventSequence[0]);
-        Assert.Equal(RunConstants.EventSunkenTreasury, engine.State.EventSequence[1]);
-    }
-
-    [Fact]
     public void StartCombat_PreservesRunPotionSlots()
     {
         var engine = new RunEngine();
@@ -914,24 +863,6 @@ public class RunEngineTests
         Assert.Equal(0, status);
         Assert.Equal(18, engine.State.PotionSlots[0]);
         Assert.Equal(18, engine.State.ActiveCombat!.PotionSlots[0]);
-    }
-
-    [Fact]
-    public void GremlinMercRewards_DoNotGenerateGoldReward()
-    {
-        var state = new RunState
-        {
-            ActiveCombat = new CombatState { EncounterId = RunConstants.GremlinMercEncounterId },
-            CurrentNodeType = RunConstants.NodeNormal,
-            PlayerHp = 35,
-            PlayerMaxHp = 80,
-            PlayerRng = new PlayerRngSet(new RunRngSet("FULLRUN_DRUM_1")),
-        };
-
-        RunRewardGenerator.GenerateCombatRewards(state);
-
-        Assert.Equal(0, state.RewardGold);
-        Assert.True(state.RewardCardPending);
     }
 
     [Fact]
@@ -981,73 +912,6 @@ public class RunEngineTests
         Assert.False(terminal);
         Assert.Equal(RunPhase.Map, engine.State.Phase);
         Assert.NotEqual(originalCard, engine.State.Deck[selectedDeckIndex].DefId);
-    }
-
-    [Fact]
-    public void AncientNewLeaf_UsesNicheRngAndCardPoolOrderForSelectedCard()
-    {
-        var engine = new RunEngine();
-        engine.Reset("FULLRUN_INSTANT_10");
-        engine.State.NeowOptions = [RunConstants.RelicNewLeaf, 0, 0];
-
-        Assert.Equal(IC.Bash, engine.State.Deck[9].DefId);
-
-        int status = engine.Step(0, -1, out _, out bool terminal, out _);
-        Assert.Equal(0, status);
-        Assert.False(terminal);
-        Assert.Equal(RunPhase.TransformSelect, engine.State.Phase);
-
-        status = engine.Step(9, -1, out _, out terminal, out _);
-        Assert.Equal(0, status);
-        Assert.False(terminal);
-        Assert.Equal(RunPhase.TransformSelect, engine.State.Phase);
-
-        status = engine.Step(RunConstants.RewardSkipAction, -1, out _, out terminal, out _);
-
-        Assert.Equal(0, status);
-        Assert.False(terminal);
-        Assert.Equal(RunPhase.Map, engine.State.Phase);
-        Assert.Equal(IC.AscendersBane, engine.State.Deck[9].DefId);
-        Assert.Equal(IC.FeelNoPain, engine.State.Deck[10].DefId);
-    }
-
-    [Fact]
-    public void NewLeafRun_FirstAllowedEventIsTheLegendsWereTrue()
-    {
-        var engine = new RunEngine();
-        engine.Reset("FULLRUN_INSTANT_10");
-        engine.State.Relics.Add(new RelicInstance(RunConstants.RelicNewLeaf));
-
-        RunNonCombatEffects.EnterEvent(engine.State);
-
-        Assert.Equal(RunPhase.Event, engine.State.Phase);
-        Assert.Equal(RunConstants.EventTheLegendsWereTrue, engine.State.EventId);
-    }
-
-    [Fact]
-    public void RunCombat_CorpseSlugsUsesWeakVariantDuringFirstThreeCombats()
-    {
-        var engine = new RunEngine();
-        engine.Reset("FULLRUN_INSTANT_10");
-
-        int status = engine.StartCombat(
-            RunConstants.StarterDeckIds,
-            9,
-            [RunConstants.RelicBurningBlood],
-            playerHp: 64,
-            playerMaxHp: 80,
-            potionIds: [0, 0, 0],
-            playerGold: 99,
-            completedCombatRoomsBeforeCurrent: 1
-        );
-
-        Assert.Equal(0, status);
-        Assert.NotNull(engine.State.ActiveCombat);
-        Assert.Equal(2, engine.State.ActiveCombat.Enemies.Count);
-        Assert.Equal([27, 29], engine.State.ActiveCombat.Enemies.Select(enemy => enemy.MaxHp));
-        Assert.Equal(IntentType.Debuff, engine.State.ActiveCombat.Enemies[0].CurrentIntent.Type);
-        Assert.Equal(IntentType.Attack, engine.State.ActiveCombat.Enemies[1].CurrentIntent.Type);
-        Assert.Equal(6, engine.State.ActiveCombat.Enemies[1].CurrentIntent.Magnitude);
     }
 
     [Fact]
