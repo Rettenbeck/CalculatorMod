@@ -3,17 +3,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.request import Request, urlopen
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
-
-from trace_real_game_run import compact_state  # noqa: E402
+from trace_real_game_run import compact_state
 
 BASE_URL = "http://localhost:15526"
 API_PATH = "/api/v1/singleplayer"

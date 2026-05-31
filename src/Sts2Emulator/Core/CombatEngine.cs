@@ -199,8 +199,6 @@ public static class CombatEngine
         }
 
         Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
-        AutoPlayStampedeAttacks(state, rng);
-        HandleEnemyDeaths(state, enemyHpsBefore, rng);
         bool allDeadAfterEndTurnPowers = state.Enemies.All(e => e.Hp <= 0);
         if (allDeadAfterEndTurnPowers)
         {
@@ -518,6 +516,7 @@ public static class CombatEngine
             Effects.CardEffects.ApplyPoisonToAllEnemies(state, noxiousFumes, rng);
         }
 
+        AutoPlayStampedeAttacks(state, rng);
         AutoPlayMayhemCards(state, rng);
 
         // Enemies choose their next intent.

@@ -1,5 +1,5 @@
 import ctypes
-import importlib.util
+import importlib
 import sys
 import unittest
 from pathlib import Path
@@ -9,24 +9,18 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
-REPLAY_TRACE_SPEC = importlib.util.spec_from_file_location(
-    "replay_full_run_trace",
-    Path(__file__).resolve().parents[2] / "scripts" / "replay_full_run_trace.py",
-)
-if REPLAY_TRACE_SPEC is None or REPLAY_TRACE_SPEC.loader is None:
-    raise RuntimeError("Could not load replay_full_run_trace.py")
-replay_full_run_trace = importlib.util.module_from_spec(REPLAY_TRACE_SPEC)
-sys.modules["replay_full_run_trace"] = replay_full_run_trace
-REPLAY_TRACE_SPEC.loader.exec_module(replay_full_run_trace)
+replay_full_run_trace = importlib.import_module("replay_full_run_trace")
+sts2_gym = importlib.import_module("sts2_gym")
+native = importlib.import_module("sts2_gym.native")
+run_env = importlib.import_module("sts2_gym.run_env")
 
-from sts2_gym import Sts2CombatEnv, Sts2RunEnv, native  # noqa: E402
-from sts2_gym.run_env import (  # noqa: E402
-    NODE_NORMAL,
-    PHASE_ANCIENT,
-    PHASE_CARD_REWARD,
-    PHASE_COMBAT,
-    PHASE_MAP,
-)
+Sts2CombatEnv = sts2_gym.Sts2CombatEnv
+Sts2RunEnv = sts2_gym.Sts2RunEnv
+NODE_NORMAL = run_env.NODE_NORMAL
+PHASE_ANCIENT = run_env.PHASE_ANCIENT
+PHASE_CARD_REWARD = run_env.PHASE_CARD_REWARD
+PHASE_COMBAT = run_env.PHASE_COMBAT
+PHASE_MAP = run_env.PHASE_MAP
 
 HAND_ID_INDICES = range(8, 28, 2)
 ENEMY_INTENT_INDICES = (47, 87, 127)

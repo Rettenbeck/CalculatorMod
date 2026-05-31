@@ -37,7 +37,7 @@ fi
 "$UV" run ruff check .
 
 # Type-check Python
-"$UV" run ty check .
+"$UV" run ty check . --error-on-warning
 
 # Check C# formatting
 "$DOTNET" csharpier check .

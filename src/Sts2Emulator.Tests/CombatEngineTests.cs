@@ -3042,7 +3042,17 @@ public class CombatEngineTests
         state.DrawPile.Clear();
         state.DiscardPile.Clear();
         state.ExhaustPile.Clear();
-        state.Enemies.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                CurrentIntent = new Intent(IntentType.Defend, 0),
+                Buffs = [],
+            },
+        ];
         BuffSystem.Apply(state.PlayerBuffs, BuffId.Constrict, 3);
 
         CombatEngine.Step(state, 0, new Random(0));

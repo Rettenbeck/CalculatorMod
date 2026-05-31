@@ -741,10 +741,17 @@ public class RunEngineTests
 
         Assert.Equal(0, status);
         Assert.False(terminal);
-        Assert.Equal(RunPhase.Map, engine.State.Phase);
+        Assert.Equal(RunPhase.Shop, engine.State.Phase);
         Assert.Equal(1_000 - cost, engine.State.Gold);
         Assert.Equal(deckSize + 1, engine.State.Deck.Count);
         Assert.Contains(new CardInstance(card, Upgraded: false), engine.State.Deck);
+        Assert.Equal(0, engine.State.ShopCards[0]);
+
+        status = engine.Step(RunConstants.ShopSkipAction, -1, out _, out terminal, out _);
+
+        Assert.Equal(0, status);
+        Assert.False(terminal);
+        Assert.Equal(RunPhase.Map, engine.State.Phase);
     }
 
     [Fact]
