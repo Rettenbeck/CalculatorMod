@@ -1418,7 +1418,7 @@ public class CombatEngineTests
 
         Assert.Equal(24, state.Enemies[0].Hp);
         Assert.Equal(1, state.AttackCardsPlayedThisTurn);
-        Assert.Equal([IC.DefendIronclad, IC.Stampede], state.Hand.Select(card => card.DefId));
+        Assert.Equal([IC.DefendIronclad], state.Hand.Select(card => card.DefId));
         Assert.Contains(state.DiscardPile, card => card.DefId == IC.StrikeIronclad);
     }
 
@@ -1836,18 +1836,17 @@ public class CombatEngineTests
         // Play Dark Embrace.
         CombatEngine.Step(state, 0, new Random(0));
         Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace));
-        Assert.Equal(2, state.Hand.Count); // True Grit + card drawn from DE exhaust
+        Assert.Single(state.Hand); // True Grit remains after the Power leaves hand.
 
-        // Play True Grit (exhausts the other card in hand or itself if we are lucky? No, hand has 2 cards now).
+        // Play True Grit after adding another card for it to exhaust.
         state.Hand.Add(new CardInstance(IC.Bash, false));
-        // Hand now has: True Grit, card from DE (Strike), Bash.
+        // Hand now has: True Grit, Bash.
         // Action 0 is True Grit.
         CombatEngine.Step(state, 0, new Random(0));
 
         // True Grit played, exhausts a card, Dark Embrace triggers again.
-        // Expected: 2 cards in hand (one from DE exhaust, one from TG exhaust).
         // True Grit itself does not exhaust, so it shouldn't trigger another draw.
-        Assert.Equal(2, state.Hand.Count);
+        Assert.Single(state.Hand);
     }
 
     [Fact]
@@ -1874,11 +1873,11 @@ public class CombatEngineTests
         // Play Dark Embrace.
         CombatEngine.Step(state, 0, new Random(0));
         Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace));
-        Assert.Equal(2, state.Hand.Count); // Ascender's Bane + card drawn from DE exhaust
+        Assert.Single(state.Hand); // Ascender's Bane remains after the Power leaves hand.
 
         // End turn. Ascender's Bane is Ethereal and should exhaust.
         // Dark Embrace should trigger but the draw should be deferred.
-        CombatEngine.Step(state, 2, new Random(0)); // action 2 is End Turn when hand has 2 cards
+        CombatEngine.Step(state, 1, new Random(0)); // action 1 is End Turn when hand has 1 card
 
         // After end turn, we should have drawn 5 cards for next turn + 1 card from Dark Embrace.
         Assert.Equal(6, state.Hand.Count);
@@ -2103,6 +2102,32 @@ public class CombatEngineTests
         Assert.Equal(9, BuffSystem.Get(state.PlayerBuffs, BuffId.Inferno));
         Assert.Equal(91, state.Enemies[0].Hp);
         Assert.Equal(91, state.Enemies[1].Hp);
+    }
+
+    [Fact]
+    public void PlayedPower_DoesNotTriggerFeelNoPainExhaustHooks()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.FeelNoPain, false), new CardInstance(IC.Inflame, false)];
+        state.Energy = 2;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 100,
+                MaxHp = 100,
+                Buffs = [],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(0, state.PlayerBlock);
+        Assert.Empty(state.ExhaustPile);
+        Assert.Equal(3, BuffSystem.Get(state.PlayerBuffs, BuffId.FeelNoPain));
+        Assert.Equal(2, BuffSystem.Get(state.PlayerBuffs, BuffId.Strength));
     }
 
     [Fact]
@@ -2597,6 +2622,11 @@ public class CombatEngineTests
 
         Assert.Equal(0, BuffSystem.Get(state.Enemies[1].Buffs, BuffId.Stunned));
         Assert.Equal(64, state.PlayerHp);
+
+        EnemyAI.ChooseIntents(state.Enemies, state.Turn, new Random(0));
+
+        Assert.Equal(IntentType.Attack, state.Enemies[1].CurrentIntent.Type);
+        Assert.Equal(6, state.Enemies[1].CurrentIntent.Magnitude);
     }
 
     [Fact]
@@ -2829,7 +2859,7 @@ public class CombatEngineTests
             [25] = 70, // Sewer Clam
             [26] = 39, // Haunted Ship
             [27] = 74, // Slithering Strangler
-            [28] = 5, // Ruby Raiders
+            [28] = 96, // Ruby Raiders include TrackerRubyRaider
             [29] = 31, // Fogmog
             [30] = 49, // Living Fog
         };

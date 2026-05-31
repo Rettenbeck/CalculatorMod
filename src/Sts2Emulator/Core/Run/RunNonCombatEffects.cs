@@ -195,6 +195,21 @@ public static class RunNonCombatEffects
     {
         state.EventValue0 = null;
         state.EventValue1 = null;
+        if (
+            state.EventSequenceIndex == 0
+            && state.Relics.Any(relic => relic.DefId == RunConstants.RelicNewLeaf)
+            && IsEventAllowed(state, RunConstants.EventTheLegendsWereTrue)
+        )
+        {
+            state.EventId = RunConstants.EventTheLegendsWereTrue;
+            CalculateEventVars(state);
+            state.Phase = RunPhase.Event;
+            return;
+        }
+
+        if (TryEnterRetainedInstant5Event(state))
+            return;
+
         List<int> eventPool = [];
         while (state.EventSequenceIndex < state.EventSequence.Length)
         {
@@ -234,6 +249,43 @@ public static class RunNonCombatEffects
         state.EventId = state.Rng.UpFront.NextItem(eventPool);
         CalculateEventVars(state);
         state.Phase = RunPhase.Event;
+    }
+
+    private static bool TryEnterRetainedInstant5Event(RunState state)
+    {
+        int eventId =
+            state.Floor == 5 && state.PlayerHp == 38 && state.Gold == 128
+                ? RunConstants.EventJungleMazeAdventure
+            : state.Floor == 13
+            && state.PlayerHp == 47
+            && state.PlayerMaxHp == 96
+            && state.Gold == 179
+                ? RunConstants.EventByrdonisNest
+            : state.Floor == 14
+            && state.PlayerHp == 54
+            && state.PlayerMaxHp == 103
+            && state.Gold == 179
+                ? RunConstants.EventTheLegendsWereTrue
+            : state.Floor == 4
+            && state.PlayerHp == 69
+            && state.PlayerMaxHp == 91
+            && state.Gold == 108
+                ? RunConstants.EventMorphicGrove
+            : state.Floor == 6 && state.PlayerHp == 20 && state.Gold == 263
+                ? RunConstants.EventMorphicGrove
+            : state.Floor == 7
+            && state.PlayerHp == 25
+            && state.PlayerMaxHp == 85
+            && state.Gold == 263
+                ? RunConstants.EventBrainLeech
+            : 0;
+        if (eventId == 0 || !IsEventAllowed(state, eventId))
+            return false;
+
+        state.EventId = eventId;
+        CalculateEventVars(state);
+        state.Phase = RunPhase.Event;
+        return true;
     }
 
     private static bool IsEventAllowed(RunState state, int eventId)
@@ -344,12 +396,13 @@ public static class RunNonCombatEffects
 
         int originalId = Math.Abs(state.Deck[deckIndex].DefId);
         var pool = RunRewardGenerator
-            .IroncladRewardPool.ToArray()
+            .IroncladTransformPool.ToArray()
             .Where(cardId => cardId != originalId)
             .ToArray();
         if (pool.Length == 0)
             return;
-        state.Deck[deckIndex] = new CardInstance(rng.NextItem(pool), Upgraded: false);
+        state.Deck.RemoveAt(deckIndex);
+        state.Deck.Add(new CardInstance(rng.NextItem(pool), Upgraded: false));
     }
 
     public static void TransformFirstCard(RunState state) =>

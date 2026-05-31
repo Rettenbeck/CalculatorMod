@@ -723,7 +723,7 @@ public static class CardEffects
         {
             if (state.DrawPile.Count == 0)
             {
-                // StableShuffle: sort then FY-shuffle (matches STS2 CardPileCmd.Shuffle).
+                // StableShuffle sorts by CardModel identity before FY-shuffling.
                 state.DrawPile = state
                     .DiscardPile.OrderBy(c => GeneratedData.Cards.Get(c.DefId).Name)
                     .ThenBy(c => c.Upgraded ? 1 : 0)

@@ -335,6 +335,8 @@ def translate_action(
 
     action_name = payload.get("action")
     phase = int(info["phase"])
+    if action_name in {"play_card", "end_turn", "use_potion"} and phase != PHASE_COMBAT:
+        return None
     if action_name == "play_card":
         return int(payload.get("card_index", 0))
     if action_name == "end_turn":
@@ -357,7 +359,11 @@ def translate_action(
         return None
     if action_name == "claim_reward":
         if phase == PHASE_RELIC_REWARD:
-            return 0
+            requested_index = int(payload.get("index", 0))
+            pending_count = sum(
+                1 for value in info.get("pending_rewards", ()) if int(value) != 0
+            )
+            return min(requested_index, max(0, pending_count - 1))
         if phase in {PHASE_CARD_REWARD, PHASE_MAP}:
             return None
     if action_name == "proceed":
@@ -386,7 +392,7 @@ def proceed_action(phase: int) -> int | None:
     if phase in {PHASE_EVENT, PHASE_ANCIENT}:
         return EVENT_SKIP_ACTION
     if phase == PHASE_RELIC_REWARD:
-        return 0
+        return REWARD_SKIP_ACTION
     if phase == PHASE_REST:
         return REWARD_SKIP_ACTION  # proceed exits rest site (same as skip action = 3)
     if phase == PHASE_TREASURE:
@@ -493,6 +499,8 @@ def summarize_battle(obs: np.ndarray) -> dict[str, Any]:
                 "hp": hp,
                 "max_hp": max_hp,
                 "block": int(obs[base + 2]),
+                "intent_type": int(obs[base + 3]),
+                "intent_mag": int(obs[base + 4]),
             }
         )
     return {"enemies": enemies}

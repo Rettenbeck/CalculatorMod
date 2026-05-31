@@ -252,48 +252,31 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             env.close()
 
-    def test_curated_full_run_traces_report_known_content_gaps(self):
-        trace_dir = Path(__file__).resolve().parents[2] / "traces" / "full-run"
-        expected_gaps = {
-            "FULLRUN_INSTANT_5.json": (
-                "step 70 field state_type: reference='event' emulator='map'",
-                "step 78: unsupported action",
-            ),
-            "FULLRUN_INSTANT_10.json": (
-                "step 19 field player.hp: reference=55 emulator=49",
-                None,
-            ),
-        }
+    def test_full_run_drum_1_trace_matches_boundary_snapshots(self):
+        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_DRUM_1.json")
 
-        for file_name, (expected_diff, expected_unsupported) in expected_gaps.items():
-            with self.subTest(file_name=file_name):
-                payload = replay_full_run_trace.load_payload(trace_dir / file_name)
-                result = replay_full_run_trace.replay_trace(
-                    payload, emulator_seed=payload.get("seed", "0")
-                )
-                diffs = replay_full_run_trace.compare_boundary_snapshots(
-                    replay_full_run_trace.compare_traces.load_trace_from_payload(
-                        payload
-                    ),
-                    replay_full_run_trace.compare_traces.load_trace_from_payload(
-                        result.payload
-                    ),
-                    replay_full_run_trace.DEFAULT_BOUNDARY_FIELDS,
-                )
-
-                self.assertTrue(diffs)
-                self.assertIn(expected_diff, diffs[0])
-                if expected_unsupported is None:
-                    self.assertIsNone(result.unsupported_action)
-                else:
-                    self.assertIsNotNone(result.unsupported_action)
-                    self.assertIn(expected_unsupported, result.unsupported_action)
+    def test_full_run_instant_5_trace_matches_boundary_snapshots(self):
+        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_INSTANT_5.json")
 
     def test_full_run_instant_9_trace_matches_boundary_snapshots(self):
-        trace_dir = Path(__file__).resolve().parents[2] / "traces" / "full-run"
-        payload = replay_full_run_trace.load_payload(
-            trace_dir / "FULLRUN_INSTANT_9.json"
+        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_INSTANT_9.json")
+
+    def test_full_run_instant_10_trace_matches_boundary_snapshots(self):
+        self._assert_full_run_trace_matches_boundary_snapshots(
+            "FULLRUN_INSTANT_10.json"
         )
+
+    def test_full_run_rarity_1_trace_matches_boundary_snapshots(self):
+        self._assert_full_run_trace_matches_boundary_snapshots("FULLRUN_RARITY_1.json")
+
+    def test_full_run_trace_cards_1_trace_matches_boundary_snapshots(self):
+        self._assert_full_run_trace_matches_boundary_snapshots(
+            "FULLRUN_TRACE_CARDS_1.json"
+        )
+
+    def _assert_full_run_trace_matches_boundary_snapshots(self, file_name):
+        trace_dir = Path(__file__).resolve().parents[2] / "traces" / "full-run"
+        payload = replay_full_run_trace.load_payload(trace_dir / file_name)
         result = replay_full_run_trace.replay_trace(
             payload, emulator_seed=payload.get("seed", "0")
         )

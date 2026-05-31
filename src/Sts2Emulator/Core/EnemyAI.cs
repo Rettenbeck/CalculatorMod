@@ -33,7 +33,8 @@ public static class EnemyAI
         if (BuffSystem.Get(enemy.Buffs, BuffId.Stunned) > 0)
         {
             BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, -1);
-            enemy.MoveIndex++;
+            if (enemy.DefId != KE.CorpseSlug)
+                enemy.MoveIndex++;
             RestoreTemporaryEnemyStrength(enemy);
             return;
         }
@@ -1059,6 +1060,7 @@ public static class EnemyAI
                 }
                 else if (!state.Enemies.Any(e => e.Hp > 0 && e.DefId == KE.EyeWithTeeth))
                 {
+                    state.Enemies.RemoveAll(e => e.Hp <= 0 && e.DefId == KE.EyeWithTeeth);
                     var eye = CreateEnemy(
                         KE.EyeWithTeeth,
                         rng,

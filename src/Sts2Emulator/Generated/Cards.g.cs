@@ -135,6 +135,7 @@ internal static class Cards
         new CardDef(Id: 10010, Name: "Disintegration", Cost: -1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Status, Rarity: CardRarity.Status, Unplayable: true),
         new CardDef(Id: 10011, Name: "Wound", Cost: -1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Status, Rarity: CardRarity.Status, Unplayable: true),
         new CardDef(Id: 10012, Name: "Wither", Cost: -1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Status, Rarity: CardRarity.Status, Unplayable: true),
+        new CardDef(Id: 10020, Name: "SpoilsMap", Cost: -1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Status, Rarity: CardRarity.Event, Unplayable: true),
         new CardDef(Id: 123, Name: "DeadlyPoison", Cost: 1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Skill, Rarity: CardRarity.Common),
         new CardDef(Id: 124, Name: "Deathbringer", Cost: 2, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Skill, Rarity: CardRarity.Uncommon),
         new CardDef(Id: 125, Name: "DeathMarch", Cost: 1, BaseDamage: 0, BaseBlock: 0, UpgradeDamage: 0, UpgradeBlock: 0, Type: CardType.Attack, Rarity: CardRarity.Uncommon),

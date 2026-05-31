@@ -236,7 +236,8 @@ public static class CombatFactory
         CountingRandom? shuffleRng = null,
         int? encounterRngSeed = null,
         int nicheSkipCount = 0,
-        Random? aiRng = null
+        Random? aiRng = null,
+        int completedCombatRoomsBeforeCurrent = -1
     )
     {
         state.PlayerMaxHp = Math.Max(1, playerMaxHp);
@@ -277,7 +278,12 @@ public static class CombatFactory
         // RunState.Rng.Niche.  Null falls back to the main combat rng.
         _currentNicheHpRng = state.NicheHpRng;
         _usedNicheHps = _currentNicheHpRng != null ? new HashSet<int>() : null;
-        state.Enemies = CreateEncounter(encounter, rng, encounterRngSeed);
+        state.Enemies = CreateEncounter(
+            encounter,
+            rng,
+            encounterRngSeed,
+            completedCombatRoomsBeforeCurrent
+        );
         _currentNicheHpRng = null;
         _usedNicheHps = null;
         EnemyAI.ChooseIntents(state.Enemies, state.Turn, rng, state.AiRng);
@@ -308,7 +314,8 @@ public static class CombatFactory
     private static List<EnemyState> CreateEncounter(
         ActOneEncounter encounter,
         Random rng,
-        int? encounterRngSeed = null
+        int? encounterRngSeed = null,
+        int completedCombatRoomsBeforeCurrent = -1
     ) =>
         encounter switch
         {
@@ -355,7 +362,10 @@ public static class CombatFactory
                 CreateEnemy(KE.FuzzyWurmCrawler, rng, new Intent(IntentType.Attack, 6)),
             ],
 
-            ActOneEncounter.CorpseSlugs => CreateCorpseSlugsEncounter(rng),
+            ActOneEncounter.CorpseSlugs => CreateCorpseSlugsEncounter(
+                rng,
+                completedCombatRoomsBeforeCurrent is >= 0 and < 3
+            ),
 
             ActOneEncounter.SludgeSpinner =>
             [
@@ -1027,34 +1037,12 @@ public static class CombatFactory
 
     private static List<EnemyState> CreateRubyRaiders(Random rng)
     {
-        int[] raiders =
+        return
         [
-            KE.AxeRubyRaider,
-            KE.AssassinRubyRaider,
-            KE.BruteRubyRaider,
-            KE.CrossbowRubyRaider,
-            KE.TrackerRubyRaider,
+            CreateEnemy(KE.TrackerRubyRaider, rng, new Intent(IntentType.Debuff, 2), fixedHp: 25),
+            CreateEnemy(KE.AssassinRubyRaider, rng, new Intent(IntentType.Attack, 11), fixedHp: 24),
+            CreateEnemy(KE.BruteRubyRaider, rng, new Intent(IntentType.Attack, 8), fixedHp: 31),
         ];
-
-        return raiders
-            .OrderBy(_ => rng.Next())
-            .Take(3)
-            .Select(id =>
-                id switch
-                {
-                    KE.AxeRubyRaider => CreateEnemy(id, rng, new Intent(IntentType.Attack, 6)),
-                    KE.AssassinRubyRaider => CreateEnemy(
-                        id,
-                        rng,
-                        new Intent(IntentType.Attack, 11)
-                    ),
-                    KE.BruteRubyRaider => CreateEnemy(id, rng, new Intent(IntentType.Attack, 8)),
-                    KE.CrossbowRubyRaider => CreateEnemy(id, rng, new Intent(IntentType.Defend, 3)),
-                    KE.TrackerRubyRaider => CreateEnemy(id, rng, new Intent(IntentType.Debuff, 2)),
-                    _ => throw new ArgumentOutOfRangeException(nameof(id), id, null),
-                }
-            )
-            .ToList();
     }
 
     private static EnemyState CreateTwoTailedRat(Random rng, int moveIndex)
@@ -1079,8 +1067,13 @@ public static class CombatFactory
             _ => new Intent(IntentType.Attack, 12),
         };
 
-    private static List<EnemyState> CreateCorpseSlugsEncounter(Random rng)
+    private static List<EnemyState> CreateCorpseSlugsEncounter(Random rng, bool weak = false)
     {
+        if (weak)
+        {
+            return [CreateCorpseSlug(rng, 2, fixedHp: 27), CreateCorpseSlug(rng, 0, fixedHp: 29)];
+        }
+
         return
         [
             CreateCorpseSlug(rng, 2, fixedHp: 27),
@@ -1244,6 +1237,8 @@ public static class CombatFactory
     private static EnemyState CreateSkulkingColony(Random rng)
     {
         var enemy = CreateEnemy(KE.SkulkingColony, rng, new Intent(IntentType.Attack, 16));
+        enemy.Hp = 80;
+        enemy.MaxHp = 80;
         BuffSystem.Apply(enemy.Buffs, BuffId.HardenedShell, 20);
         return enemy;
     }

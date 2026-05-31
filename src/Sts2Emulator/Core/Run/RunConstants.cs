@@ -45,9 +45,12 @@ public static class RunConstants
     public const int EventTheLegendsWereTrue = 7;
     public const int EventDoorsOfLightAndDark = 8;
     public const int EventSunkenTreasury = 9;
+    public const int EventByrdonisNest = 10;
 
     public const int SlimesWeakEncounterId = 3;
     public const int GremlinMercEncounterId = 7;
+    public const int SeapunkEncounterId = 12;
+    public const int PunchConstructEncounterId = 24;
 
     public static ReadOnlySpan<int> OvergrowthWeakEncounters => [8, 2, 11, 3];
     public static ReadOnlySpan<int> UnderdocksWeakEncounters => [9, 12, 10, 13];
@@ -103,7 +106,7 @@ public static class RunConstants
     public const int RelicPandorasBox = 1510;
 
     public const int CursePlaceholderCard = 10001;
-    public const int SpoilsMapCard = 10002;
+    public const int SpoilsMapCard = 10020;
     public const int NeowsFuryCard = 321;
 
     public static ReadOnlySpan<int> StarterDeckIds =>
@@ -142,7 +145,7 @@ public static class RunConstants
                 or 457
                 or 512
                 or 10001
-                or 10002
+                or SpoilsMapCard
                 or 10008
                 or 10009
                 or 10010

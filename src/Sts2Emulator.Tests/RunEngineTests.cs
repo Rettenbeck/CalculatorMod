@@ -1,4 +1,5 @@
 using Sts2Emulator.Core;
+using Sts2Emulator.Core.Effects;
 using Sts2Emulator.Core.Rng;
 using Sts2Emulator.Core.Run;
 using Sts2Emulator.Interop;
@@ -948,10 +949,10 @@ public class RunEngineTests
         Assert.Equal(0, status);
         Assert.False(terminal);
         Assert.Equal(RunPhase.RelicReward, engine.State.Phase);
-        Assert.Equal(31, engine.State.PlayerHp);
+        Assert.Equal(25, engine.State.PlayerHp);
         Assert.All(engine.State.RewardCards, cardId => Assert.NotEqual(0, cardId));
         Assert.True(engine.State.RewardCardPending);
-        Assert.True(engine.State.PlayerRng.Rewards.CallCount > rewardsCallsBefore);
+        Assert.Equal(rewardsCallsBefore, engine.State.PlayerRng.Rewards.CallCount);
     }
 
     [Fact]
@@ -960,7 +961,8 @@ public class RunEngineTests
         var engine = new RunEngine();
         engine.Reset("0");
         engine.State.NeowOptions = [RunConstants.RelicNewLeaf, 0, 0];
-        int originalCard = engine.State.Deck[0].DefId;
+        const int selectedDeckIndex = 9;
+        int originalCard = engine.State.Deck[selectedDeckIndex].DefId;
 
         int status = engine.Step(0, -1, out _, out bool terminal, out _);
 
@@ -973,12 +975,79 @@ public class RunEngineTests
         Assert.Equal(0, status);
         Assert.Equal(RunPhase.TransformSelect, engine.State.Phase);
 
+        status = engine.Step(selectedDeckIndex, -1, out _, out terminal, out _);
+
+        Assert.Equal(0, status);
+        Assert.False(terminal);
+        Assert.Equal(RunPhase.Map, engine.State.Phase);
+        Assert.NotEqual(originalCard, engine.State.Deck[selectedDeckIndex].DefId);
+    }
+
+    [Fact]
+    public void AncientNewLeaf_UsesNicheRngAndCardPoolOrderForSelectedCard()
+    {
+        var engine = new RunEngine();
+        engine.Reset("FULLRUN_INSTANT_10");
+        engine.State.NeowOptions = [RunConstants.RelicNewLeaf, 0, 0];
+
+        Assert.Equal(IC.Bash, engine.State.Deck[9].DefId);
+
+        int status = engine.Step(0, -1, out _, out bool terminal, out _);
+        Assert.Equal(0, status);
+        Assert.False(terminal);
+        Assert.Equal(RunPhase.TransformSelect, engine.State.Phase);
+
+        status = engine.Step(9, -1, out _, out terminal, out _);
+        Assert.Equal(0, status);
+        Assert.False(terminal);
+        Assert.Equal(RunPhase.TransformSelect, engine.State.Phase);
+
         status = engine.Step(RunConstants.RewardSkipAction, -1, out _, out terminal, out _);
 
         Assert.Equal(0, status);
         Assert.False(terminal);
         Assert.Equal(RunPhase.Map, engine.State.Phase);
-        Assert.NotEqual(originalCard, engine.State.Deck[0].DefId);
+        Assert.Equal(IC.AscendersBane, engine.State.Deck[9].DefId);
+        Assert.Equal(IC.FeelNoPain, engine.State.Deck[10].DefId);
+    }
+
+    [Fact]
+    public void NewLeafRun_FirstAllowedEventIsTheLegendsWereTrue()
+    {
+        var engine = new RunEngine();
+        engine.Reset("FULLRUN_INSTANT_10");
+        engine.State.Relics.Add(new RelicInstance(RunConstants.RelicNewLeaf));
+
+        RunNonCombatEffects.EnterEvent(engine.State);
+
+        Assert.Equal(RunPhase.Event, engine.State.Phase);
+        Assert.Equal(RunConstants.EventTheLegendsWereTrue, engine.State.EventId);
+    }
+
+    [Fact]
+    public void RunCombat_CorpseSlugsUsesWeakVariantDuringFirstThreeCombats()
+    {
+        var engine = new RunEngine();
+        engine.Reset("FULLRUN_INSTANT_10");
+
+        int status = engine.StartCombat(
+            RunConstants.StarterDeckIds,
+            9,
+            [RunConstants.RelicBurningBlood],
+            playerHp: 64,
+            playerMaxHp: 80,
+            potionIds: [0, 0, 0],
+            playerGold: 99,
+            completedCombatRoomsBeforeCurrent: 1
+        );
+
+        Assert.Equal(0, status);
+        Assert.NotNull(engine.State.ActiveCombat);
+        Assert.Equal(2, engine.State.ActiveCombat.Enemies.Count);
+        Assert.Equal([27, 29], engine.State.ActiveCombat.Enemies.Select(enemy => enemy.MaxHp));
+        Assert.Equal(IntentType.Debuff, engine.State.ActiveCombat.Enemies[0].CurrentIntent.Type);
+        Assert.Equal(IntentType.Attack, engine.State.ActiveCombat.Enemies[1].CurrentIntent.Type);
+        Assert.Equal(6, engine.State.ActiveCombat.Enemies[1].CurrentIntent.Magnitude);
     }
 
     [Fact]

@@ -114,7 +114,11 @@ public static class CombatEngine
         // Corruption: Skills exhaust instead of discard.
         bool corruptedSkill =
             def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0;
-        if (ShouldExhaustAfterPlay(def, card) || corruptedSkill)
+        if (def.Type == CardType.Power)
+        {
+            // Played powers leave hand without firing exhaust hooks.
+        }
+        else if (ShouldExhaustAfterPlay(def, card) || corruptedSkill)
             Effects.CardEffects.ExhaustCard(state, card, rng: rng);
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
@@ -609,7 +613,11 @@ public static class CombatEngine
                 Effects.CardEffects.GainBlock(state, rage);
         }
 
-        if (ShouldExhaustAfterPlay(def, card))
+        if (def.Type == CardType.Power)
+        {
+            // Played powers leave hand without firing exhaust hooks.
+        }
+        else if (ShouldExhaustAfterPlay(def, card))
             Effects.CardEffects.ExhaustCard(state, card, rng: rng);
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
@@ -630,8 +638,6 @@ public static class CombatEngine
     {
         if (def.Id == Effects.IC.Stampede)
             return false;
-        if (def.Type == CardType.Power)
-            return true;
         if (def.Id == Effects.CL.Prolong && card.Upgraded)
             return false;
         return def.Exhaust;
@@ -661,9 +667,12 @@ public static class CombatEngine
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
 
         // Resolve status effects (Juggling, Rupture, etc. already handled in Apply or below).
-        // Powers, Ethereal, etc. handled in ShouldExhaustAfterPlay.
 
-        if (ShouldExhaustAfterPlay(def, card))
+        if (def.Type == CardType.Power)
+        {
+            // Played powers leave hand without firing exhaust hooks.
+        }
+        else if (ShouldExhaustAfterPlay(def, card))
             Effects.CardEffects.ExhaustCard(state, card, rng: rng);
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
