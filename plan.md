@@ -27,6 +27,7 @@ Make the emulator match the retained Ironclad RunReplays trace exactly enough to
 
 - Preserve `ironclad-1` replay parity while broadening modeled run behavior.
 - Replace retained trace pins with decompiled/general implementations when the surrounding systems become available.
+- Continue expanding behavior beyond Act 1 reward-pool cards and Act 1 events as new traces expose gaps.
 - Keep full-run replay diagnostics focused on actionable boundary diffs and unsupported actions.
 
 ## Mismatch Log
@@ -37,6 +38,10 @@ Make the emulator match the retained Ironclad RunReplays trace exactly enough to
 - Resolved: Smithing now enters deck selection, upgrades the selected card, then returns through the rest result screen.
 - Resolved: trace-surfaced Ironclad combat behavior for Havoc, Body Slam+, Perfected Strike, Duplicator potion, and enchanted card damage/block.
 - Resolved: retained reward, route, event, and combat corrections needed for the current `ironclad-1` trace.
+- Resolved: all run reward/shop/deck cards reported by `scripts\ralph\card_coverage.py` now have explicit native `CardEffects` cases.
+- Resolved: generated cards from other class pools now route through native behavior instead of inert fallback; all non-explicit generated Attacks, Skills, and Powers with no base damage/block have deterministic native effects.
+- Resolved: Act 1 Overgrowth and Underdocks event pools now include modeled event IDs instead of dropping unimplemented events from generation.
+- Resolved: first-pass event effects are modeled for Dense Vegetation, Luminous Choir, Sapphire Seed, Sunken Statue, Tablet of Truth, Wellspring, Whispering Hollow, Wood Carvings, Abyssal Baths, Drowning Beacon, Endless Conveyor, Punch-Off, Spiraling Whirlpool, Trash Heap, and Waterlogged Scriptorium.
 - Verified: `uv run python scripts\replay_full_run_trace.py traces\full-run\ironclad-1.json --emulator-seed FKSYQMYRRV --output tmp\ironclad-1-emulator-final.json --max-diffs 30` reports `Full-run boundary snapshots match on configured fields.`
 
 ## Validation

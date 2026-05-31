@@ -47,6 +47,21 @@ public static class RunConstants
     public const int EventSunkenTreasury = 9;
     public const int EventByrdonisNest = 10;
     public const int EventSelfHelpBook = 11;
+    public const int EventDenseVegetation = 12;
+    public const int EventLuminousChoir = 13;
+    public const int EventSapphireSeed = 14;
+    public const int EventSunkenStatue = 15;
+    public const int EventTabletOfTruth = 16;
+    public const int EventWellspring = 17;
+    public const int EventWhisperingHollow = 18;
+    public const int EventWoodCarvings = 19;
+    public const int EventAbyssalBaths = 20;
+    public const int EventDrowningBeacon = 21;
+    public const int EventEndlessConveyor = 22;
+    public const int EventPunchOff = 23;
+    public const int EventSpiralingWhirlpool = 24;
+    public const int EventTrashHeap = 25;
+    public const int EventWaterloggedScriptorium = 26;
 
     public const int SlimesWeakEncounterId = 3;
     public const int GremlinMercEncounterId = 7;

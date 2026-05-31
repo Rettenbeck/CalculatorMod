@@ -79,32 +79,32 @@ public static class RunMapGenerator
         int[] eventPool = underdocks
             ?
             [
-                0, // Abyssal Baths
-                0, // Drowning Beacon
-                0, // Endless Conveyor
-                0, // Punch-Off
-                0, // Spiraling Whirlpool
-                0, // Sunken Statue
+                RunConstants.EventAbyssalBaths,
+                RunConstants.EventDrowningBeacon,
+                RunConstants.EventEndlessConveyor,
+                RunConstants.EventPunchOff,
+                RunConstants.EventSpiralingWhirlpool,
+                RunConstants.EventSunkenStatue,
                 RunConstants.EventSunkenTreasury,
                 RunConstants.EventDoorsOfLightAndDark,
-                0, // Trash Heap
-                0, // Waterlogged Scriptorium
+                RunConstants.EventTrashHeap,
+                RunConstants.EventWaterloggedScriptorium,
             ]
             :
             [
                 RunConstants.EventAromaOfChaos,
-                0, // Byrdonis Nest
-                0, // Dense Vegetation
+                RunConstants.EventByrdonisNest,
+                RunConstants.EventDenseVegetation,
                 RunConstants.EventJungleMazeAdventure,
-                0, // Luminous Choir
+                RunConstants.EventLuminousChoir,
                 RunConstants.EventSelfHelpBook,
-                0, // Sapphire Seed
-                0, // Sunken Statue
-                0, // Tablet of Truth
+                RunConstants.EventSapphireSeed,
+                RunConstants.EventSunkenStatue,
+                RunConstants.EventTabletOfTruth,
                 RunConstants.EventUnrestSite,
-                0, // Wellspring
-                0, // Whispering Hollow
-                0, // Wood Carvings
+                RunConstants.EventWellspring,
+                RunConstants.EventWhisperingHollow,
+                RunConstants.EventWoodCarvings,
             ];
 
         var rng = new GameRng(state.Rng.Seed, "up_front");

@@ -80,6 +80,7 @@ public static class BuffSystem
     {
         float dmg = baseDamage;
         dmg += Get(attackerBuffs, BuffId.Strength);
+        dmg += Get(attackerBuffs, BuffId.Vigor);
         if (Get(attackerBuffs, BuffId.Weak) > 0)
             dmg *= 0.75f;
         if (Get(attackerBuffs, BuffId.Shrink) != 0)
@@ -95,6 +96,8 @@ public static class BuffSystem
     public static int IncomingBlock(int baseBlock, List<BuffState> buffs, bool isDefend = false)
     {
         float blk = baseBlock;
+        if (Get(buffs, BuffId.NoBlock) > 0)
+            return 0;
         blk += Get(buffs, BuffId.Dexterity);
         if (Get(buffs, BuffId.Frail) > 0)
             blk *= 0.75f;
@@ -113,5 +116,6 @@ public static class BuffSystem
                 or BuffId.Shrink
                 or BuffId.Tangled
                 or BuffId.Constrict
-                or BuffId.Smoggy;
+                or BuffId.Smoggy
+                or BuffId.NoBlock;
 }

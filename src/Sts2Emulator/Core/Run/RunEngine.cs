@@ -1223,6 +1223,216 @@ public sealed class RunEngine
                 else if (action != RunConstants.EventSkipAction)
                     return -1;
                 break;
+            case RunConstants.EventDenseVegetation:
+                if (action == 0)
+                {
+                    State.PlayerHp = Math.Max(0, State.PlayerHp - 8);
+                    State.Gold += 80;
+                }
+                else if (action == 1)
+                    HealPlayer(RestHealAmount());
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventLuminousChoir:
+                if (action == 0)
+                {
+                    RunNonCombatEffects.RemoveLowestPriorityCard(State);
+                    RunNonCombatEffects.RemoveLowestPriorityCard(State);
+                    State.Deck.Add(
+                        new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
+                    );
+                }
+                else if (action == 1)
+                {
+                    if (State.Gold < 149)
+                        return -1;
+                    State.Gold -= 149;
+                    RunNonCombatEffects.ApplyRelicPickup(
+                        State,
+                        RunRewardGenerator.NextRelic(State)
+                    );
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventSapphireSeed:
+                if (action == 0)
+                {
+                    HealPlayer(9);
+                    if (!RunNonCombatEffects.UpgradeFirstCard(State))
+                        return -1;
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventSunkenStatue:
+                if (action == 0)
+                    RunNonCombatEffects.ApplyRelicPickup(
+                        State,
+                        RunRewardGenerator.NextRelic(State)
+                    );
+                else if (action == 1)
+                {
+                    State.Gold += 111;
+                    State.PlayerHp = Math.Max(0, State.PlayerHp - 12);
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventTabletOfTruth:
+                if (action == 0)
+                    HealPlayer(10);
+                else if (action == 1)
+                {
+                    State.PlayerMaxHp = Math.Max(1, State.PlayerMaxHp - 6);
+                    State.PlayerHp = Math.Min(State.PlayerHp, State.PlayerMaxHp);
+                    if (!RunNonCombatEffects.UpgradeFirstCard(State))
+                        return -1;
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventWellspring:
+                if (action == 0)
+                    RunRewardGenerator.AddPotion(
+                        State,
+                        RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
+                    );
+                else if (action == 1)
+                {
+                    RunNonCombatEffects.RemoveLowestPriorityCard(State);
+                    State.Deck.Add(
+                        new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
+                    );
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventWhisperingHollow:
+                if (action == 0)
+                {
+                    if (State.Gold < 35)
+                        return -1;
+                    State.Gold -= 35;
+                    RunRewardGenerator.AddPotion(
+                        State,
+                        RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
+                    );
+                    RunRewardGenerator.AddPotion(
+                        State,
+                        RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
+                    );
+                }
+                else if (action == 1)
+                {
+                    State.PlayerHp = Math.Max(0, State.PlayerHp - 9);
+                    RunNonCombatEffects.TransformFirstCard(State);
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventWoodCarvings:
+                if (action is >= 0 and <= 2)
+                    RunNonCombatEffects.TransformFirstCard(State);
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventAbyssalBaths:
+                if (action == 0)
+                {
+                    RunNonCombatEffects.GainMaxHp(State, 2);
+                    State.PlayerHp = Math.Max(0, State.PlayerHp - 1);
+                }
+                else if (action == 1)
+                    HealPlayer(10);
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventDrowningBeacon:
+                if (action == 0)
+                {
+                    if (State.PlayerHp <= 13)
+                        return -1;
+                    State.PlayerHp -= 13;
+                    RunRewardGenerator.AddPotion(State, 29);
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventEndlessConveyor:
+                if (action == 0)
+                {
+                    if (State.Gold < 40)
+                        return -1;
+                    State.Gold -= 40;
+                    RunRewardGenerator.AddPotion(
+                        State,
+                        RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
+                    );
+                }
+                else if (action == 1)
+                    HealPlayer(10);
+                else if (action == 2)
+                    RunNonCombatEffects.GainMaxHp(State, 4);
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventPunchOff:
+                if (action == 0)
+                {
+                    State.Gold += 50;
+                    RunRewardGenerator.AddPotion(
+                        State,
+                        RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
+                    );
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventSpiralingWhirlpool:
+                if (action == 0)
+                    HealPlayer(RestHealAmount());
+                else if (action == 1)
+                    RunNonCombatEffects.TransformFirstCard(State);
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventTrashHeap:
+                if (action == 0)
+                {
+                    State.PlayerHp = Math.Max(0, State.PlayerHp - 8);
+                    State.Gold += 100;
+                }
+                else if (action == 1)
+                    RunNonCombatEffects.ApplyRelicPickup(
+                        State,
+                        RunRewardGenerator.NextRelic(State)
+                    );
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
+            case RunConstants.EventWaterloggedScriptorium:
+                if (action == 0)
+                {
+                    if (State.Gold < 55)
+                        return -1;
+                    State.Gold -= 55;
+                    RunNonCombatEffects.UpgradeFirstCard(State);
+                }
+                else if (action == 1)
+                    RunNonCombatEffects.GainMaxHp(State, 6);
+                else if (action == 2)
+                {
+                    State.RewardGold = 0;
+                    State.RewardPotion = 0;
+                    State.RelicReward = 0;
+                    RunRewardGenerator.EnterCardReward(State);
+                    return 0;
+                }
+                else if (action != RunConstants.EventSkipAction)
+                    return -1;
+                break;
             default:
                 if (action == 0)
                 {
@@ -1323,6 +1533,11 @@ public sealed class RunEngine
     }
 
     private int RestHealAmount() => Math.Max(1, (int)(State.PlayerMaxHp * 0.3));
+
+    private void HealPlayer(int amount)
+    {
+        State.PlayerHp = Math.Min(State.PlayerMaxHp, State.PlayerHp + amount);
+    }
 
     private int EventGoldAmount(int baseAmount)
     {

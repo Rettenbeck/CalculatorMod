@@ -37,6 +37,27 @@ public enum BuffId
     SetupStrikePower, // player: temporary Strength marker
     EntropyPower, // player: transform N cards in hand at turn start
     FastenPower, // player: gain extra block from Defend cards
+    AutomationPower, // player: gain N energy after every 10 drawn cards
+    CalamityPower, // player: generate N random Attacks after each played Attack
+    MayhemPower, // player: auto-play N cards from the top of draw pile each turn
+    PanachePower, // player: deal N damage to all enemies after every five card plays
+    PrepTimePower, // player: gain N Vigor at the start of each player turn
+    RollingBoulderPower, // player: deal N damage to all enemies at turn start, then grow
+    StratagemPower, // player: pull N cards from draw pile to hand after shuffling
+    TheBombPower, // player: turns remaining until The Bomb explodes
+    TheBombDamage, // player: damage dealt by The Bomb when it expires
+    Vigor, // player: add N damage to the next Attack, then expire
+    NoBlock, // player: card-based block gains are prevented for N enemy turns
+    ClawDamage, // player: bonus damage for future Claw plays
+    Focus, // player: orb-like generated effects scale by N
+    Envenom, // player: apply Poison when attacks deal damage
+    InfiniteBlades, // player: add Shivs at turn start
+    NoxiousFumes, // player: apply Poison to all enemies each turn
+    NextTurnEnergy, // player: gain N energy next turn
+    NextTurnDraw, // player: draw N extra cards next turn
+    ToolsOfTheTrade, // player: draw then discard one at turn start
+    ShivDamage, // player: bonus damage for Shiv-like cards
+    Afterimage, // player: gain N block after playing a card
     FranticEscapePlayedCount, // player: track plays to increase cost
     RetainHand, // player: keep remaining hand at end of player turn
     BlockNextTurn, // player: gain N unpowered block after next turn's block clear

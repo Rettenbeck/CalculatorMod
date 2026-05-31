@@ -621,6 +621,26 @@ public static class CardEffects
 
             // ── Colorless ────────────────────────────────────────────────────────
 
+            case CL.GangUp: // 1-cost, 5/7 plus multiplayer ally-hit scaling
+                DealDamage(state, upgraded ? 7 : 5);
+                break;
+
+            case CL.GoldAxe: // 1-cost, damage equals cards played this combat
+                DealDamage(state, state.CardsPlayedThisCombat);
+                break;
+
+            case CL.MindBlast: // 1/0-cost, damage equals draw pile size, Innate
+                DealDamage(state, state.DrawPile.Count);
+                break;
+
+            case CL.Rend: // 2-cost, 15/18 + 5/8 per non-temporary debuff on target
+            {
+                var target = FirstEnemy(state);
+                int debuffs = target != null ? CountRendDebuffs(target) : 0;
+                DealDamage(state, (upgraded ? 18 : 15) + debuffs * (upgraded ? 8 : 5));
+                break;
+            }
+
             case CL.Alchemize: // 1/0-cost, gain random potion
                 ProcureRandomPotion(state, rng);
                 break;
@@ -664,29 +684,123 @@ public static class CardEffects
                 break;
             }
 
-            case CL.Entropy: // 2-cost, transform 1/2 cards in hand each turn
+            case CL.BelieveInYou: // 0-cost multiplayer ally energy; self in single-player
+                state.Energy += upgraded ? 3 : 2;
+                break;
+
+            case CL.HuddleUp: // 1-cost multiplayer team draw; self in single-player
+                DrawCards(state, upgraded ? 3 : 2, rng);
+                break;
+
+            case CL.Impatience: // 0-cost, draw if no Attacks remain in hand
+                if (state.Hand.All(c => GeneratedData.Cards.Get(c.DefId).Type != CardType.Attack))
+                    DrawCards(state, upgraded ? 3 : 2, rng);
+                break;
+
+            case CL.JackOfAllTrades: // 0-cost, add 1/2 random colorless cards, exhaust
+                AddRandomColorlessCardsToHand(state, upgraded ? 2 : 1, rng);
+                break;
+
+            case CL.MasterOfStrategy: // 0-cost, draw 3/4, exhaust
+                DrawCards(state, upgraded ? 4 : 3, rng);
+                break;
+
+            case CL.Mimic: // 1-cost, gain block equal to target ally's block; self in SP
+                GainBlock(state, state.PlayerBlock);
+                break;
+
+            case CL.PanicButton: // 0-cost, 30/40 block, then no card block for 2 turns
+                GainBlock(state, upgraded ? 40 : 30);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.NoBlock, 2);
+                break;
+
+            case CL.Production: // 0-cost, gain 2/3 energy, exhaust
+                state.Energy += upgraded ? 3 : 2;
+                break;
+
+            case CL.Purity: // 0-cost, exhaust up to 3/5 cards from hand
+                ExhaustFirstCardsFromHand(state, upgraded ? 5 : 3, rng);
+                break;
+
+            case CL.SecretTechnique: // 0-cost, move a Skill from draw pile to hand
+                MoveFirstDrawPileCardOfTypeToHand(state, CardType.Skill);
+                break;
+
+            case CL.SecretWeapon: // 0-cost, move an Attack from draw pile to hand
+                MoveFirstDrawPileCardOfTypeToHand(state, CardType.Attack);
+                break;
+
+            case CL.ThinkingAhead: // 0-cost, draw 2 then put a card from hand on draw
+                DrawCards(state, 2, rng);
+                MoveFirstHandCardToTopOfDrawPile(state);
+                break;
+
+            case CL.TheBomb: // 2-cost, after 3 turns deal 40/50 to ALL enemies
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.TheBombPower, 3);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.TheBombDamage, upgraded ? 50 : 40);
+                break;
+
+            case CL.Scrawl: // 1-cost, draw until hand is full, exhaust
+                DrawCards(state, MaxCardsInHand - state.Hand.Count, rng);
+                break;
+
+            case CL.Shockwave: // 2-cost, Weak and Vulnerable 3/5 to ALL enemies, exhaust
+                ApplyAllEnemyDebuff(state, BuffId.Weak, upgraded ? 5 : 3, rng);
+                ApplyAllEnemyDebuff(state, BuffId.Vulnerable, upgraded ? 5 : 3, rng);
+                break;
+
+            case CL.Automation: // 1/0-cost, every 10 drawn cards gain 1 energy
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.AutomationPower, 1);
+                break;
+
+            case CL.BeaconOfHope: // multiplayer-only shared block; no-op in single-player
+                break;
+
+            case CL.Calamity: // 3/2-cost, after each Attack add a random Attack to hand
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.CalamityPower, 1);
+                break;
+
+            case CL.Entropy: // 1-cost, transform 1 card in hand each turn
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.EntropyPower, upgraded ? 2 : 1);
+                break;
+
+            case CL.EternalArmor: // 3-cost, gain 9/12 Plating
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Plating, upgraded ? 12 : 9);
                 break;
 
             case CL.Fasten: // 1-cost, Defend cards give 4/6 extra block
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.FastenPower, upgraded ? 6 : 4);
                 break;
 
+            case CL.Mayhem: // 2/1-cost, auto-play top draw card each turn
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.MayhemPower, 1);
+                break;
+
+            case CL.Panache: // 0-cost, every five played cards deal 10/14 to ALL
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.PanachePower, upgraded ? 14 : 10);
+                break;
+
+            case CL.PrepTime: // 1-cost, gain 4/6 Vigor each turn
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.PrepTimePower, upgraded ? 6 : 4);
+                break;
+
+            case CL.Prowess: // 1-cost, gain 1/2 Strength and Dexterity
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, upgraded ? 2 : 1);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Dexterity, upgraded ? 2 : 1);
+                break;
+
+            case CL.RollingBoulder: // 3-cost, start of turn damage to ALL, grows by 5
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.RollingBoulderPower, upgraded ? 10 : 5);
+                break;
+
+            case CL.Stratagem: // 1/0-cost, after shuffle move a card from draw to hand
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.StratagemPower, 1);
+                break;
+
             // ── Fallback ─────────────────────────────────────────────────────────
 
             default:
-                if (def.Type != CardType.Status && def.Type != CardType.Curse)
-                {
-                    int dmg =
-                        (upgraded ? def.BaseDamage + def.UpgradeDamage : def.BaseDamage)
-                        + card.Sharp;
-                    int blk =
-                        (upgraded ? def.BaseBlock + def.UpgradeBlock : def.BaseBlock) + card.Nimble;
-                    if (dmg > 0)
-                        DealDamage(state, dmg);
-                    if (blk > 0)
-                        GainBlock(state, blk, isDefend: def.Name.Contains("Defend"));
-                }
+                ApplyGeneratedCardApproximation(def, upgraded, state, rng, card);
                 break;
         }
     }
@@ -744,12 +858,14 @@ public static class CardEffects
                     .ToList();
                 ShufflePile(state.DrawPile, state.ShuffleRng ?? rng);
                 state.DiscardPile.Clear();
+                MoveStratagemCardsToHandAfterShuffle(state);
             }
             if (state.DrawPile.Count == 0)
                 break;
 
             var card = state.DrawPile[0];
             state.DrawPile.RemoveAt(0);
+            CountDrawnCardForAutomation(state);
 
             if (
                 BuffSystem.Get(state.PlayerBuffs, BuffId.Hellraiser) > 0
@@ -766,6 +882,20 @@ public static class CardEffects
             {
                 state.DiscardPile.Add(card);
             }
+        }
+    }
+
+    private static void CountDrawnCardForAutomation(CombatState state)
+    {
+        int automation = BuffSystem.Get(state.PlayerBuffs, BuffId.AutomationPower);
+        if (automation <= 0)
+            return;
+
+        state.DrawnCardsSinceAutomationProc++;
+        if (state.DrawnCardsSinceAutomationProc >= 10)
+        {
+            state.DrawnCardsSinceAutomationProc = 0;
+            state.Energy += automation;
         }
     }
 
@@ -901,6 +1031,12 @@ public static class CardEffects
             BuffSystem.Apply(target.Buffs, BuffId.Slippery, -1);
         }
         target.Hp = Math.Max(0, target.Hp - hpLoss);
+        if (hpLoss > 0)
+        {
+            int envenom = BuffSystem.Get(state.PlayerBuffs, BuffId.Envenom);
+            if (envenom > 0)
+                BuffSystem.Apply(target.Buffs, BuffId.Poison, envenom);
+        }
         if (target.Hp == 0)
             OnEnemyDeath(state, target);
         return hpLoss;
@@ -970,6 +1106,492 @@ public static class CardEffects
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
+
+    private static void ApplyGeneratedCardApproximation(
+        CardDef def,
+        bool upgraded,
+        CombatState state,
+        Random rng,
+        CardInstance card
+    )
+    {
+        if (def.Type is CardType.Status or CardType.Curse)
+            return;
+
+        ApplyBaseDamageAndBlock(def, upgraded, state, card);
+
+        switch (def.Name)
+        {
+            case "Alignment":
+            case "EnergySurge":
+            case "Luminesce":
+            case "Supercritical":
+            case "Wisp":
+                state.Energy += upgraded ? 2 : 1;
+                break;
+            case "BorrowedTime":
+                state.Energy += upgraded ? 3 : 2;
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.NoBlock, 1);
+                break;
+            case "Acrobatics":
+                DrawCards(state, upgraded ? 4 : 3, rng);
+                DiscardFirstCardsFromHand(state, 1);
+                break;
+            case "Accuracy":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.ShivDamage, upgraded ? 6 : 4);
+                break;
+            case "Adrenaline":
+                state.Energy += upgraded ? 2 : 1;
+                DrawCards(state, 2, rng);
+                break;
+            case "Afterimage":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Afterimage, 1);
+                break;
+            case "Afterlife":
+                DrawCards(state, upgraded ? 2 : 1, rng);
+                break;
+            case "Anticipate":
+            case "Prepared":
+                DrawCards(state, upgraded ? 2 : 1, rng);
+                DiscardFirstCardsFromHand(state, 1);
+                break;
+            case "Apotheosis":
+                UpgradeAllCardsInHand(state);
+                UpgradePile(state.DrawPile);
+                UpgradePile(state.DiscardPile);
+                break;
+            case "Apparition":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Intangible, 1);
+                break;
+            case "Backflip":
+            case "Coolheaded":
+            case "EscapePlan":
+            case "Finesse":
+            case "FlashOfSteel":
+            case "PommelStrike":
+            case "ShrugItOff":
+            case "SweepingBeam":
+                DrawCards(state, 1, rng);
+                break;
+            case "BattleTrance":
+                DrawCards(state, upgraded ? 4 : 3, rng);
+                break;
+            case "Begone":
+            case "Charge":
+            case "Guards":
+            case "Seance":
+            case "Transfigure":
+                TransformRandomCardInHand(state, rng);
+                break;
+            case "BigBang":
+            case "BrightestFlame":
+            case "Fuel":
+                state.Energy += upgraded ? 3 : 2;
+                DrawCards(state, upgraded ? 3 : 2, rng);
+                break;
+            case "BladeDance":
+                AddGeneratedCardsToHand(state, 430, upgraded ? 4 : 3);
+                break;
+            case "Bodyguard":
+                GainBlock(state, upgraded ? 12 : 8);
+                break;
+            case "Blur":
+            case "Equilibrium":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, 1);
+                break;
+            case "BootSequence":
+            case "Mirage":
+            case "Sacrifice":
+                GainBlock(state, upgraded ? 14 : 10);
+                break;
+            case "BladeOfInk":
+            case "ForegoneConclusion":
+            case "HiddenCache":
+            case "Hotfix":
+            case "KnowThyPlace":
+            case "Spur":
+            case "TheSmith":
+            case "UpMySleeve":
+                DrawCards(state, 1, rng);
+                state.Energy += upgraded ? 1 : 0;
+                break;
+            case "BouncingFlask":
+                ApplyEnemyDebuff(state, BuffId.Poison, upgraded ? 12 : 9, rng);
+                break;
+            case "BubbleBubble":
+            case "Putrefy":
+                ApplyEnemyDebuff(state, BuffId.Poison, upgraded ? 8 : 5, rng);
+                break;
+            case "BundleOfJoy":
+            case "Dirge":
+            case "Distraction":
+            case "GlimpseBeyond":
+            case "Largesse":
+            case "Metamorphosis":
+            case "Quasar":
+            case "WhiteNoise":
+                AddRandomClassCardToHand(state, rng, upgraded);
+                break;
+            case "Burst":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, upgraded ? 2 : 1);
+                break;
+            case "BulletTime":
+            case "Enlightenment":
+                MakeHandFreeThisTurn(state);
+                break;
+            case "CalculatedGamble":
+                DiscardFirstCardsFromHand(state, state.Hand.Count);
+                DrawCards(state, state.DiscardPile.Count, rng);
+                break;
+            case "Caltrops":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Thorns, upgraded ? 5 : 3);
+                break;
+            case "ChargeBattery":
+            case "DodgeAndRoll":
+            case "Prolong":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.BlockNextTurn, upgraded ? 8 : 5);
+                break;
+            case "Chill":
+            case "Chaos":
+            case "Coolant":
+            case "Fusion":
+            case "Zap":
+                ApplyOrbLikeValue(state, def.Name, upgraded);
+                break;
+            case "Cleanse":
+                BuffSystem.Remove(state.PlayerBuffs, BuffId.Vulnerable);
+                BuffSystem.Remove(state.PlayerBuffs, BuffId.Weak);
+                BuffSystem.Remove(state.PlayerBuffs, BuffId.Frail);
+                break;
+            case "Claw":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.ClawDamage, upgraded ? 3 : 2);
+                break;
+            case "CloakAndDagger":
+                AddGeneratedCardsToHand(state, 430, upgraded ? 2 : 1);
+                break;
+            case "Conqueror":
+            case "Deathbringer":
+            case "Eidolon":
+            case "FeedingFrenzy":
+            case "NoEscape":
+            case "Oblivion":
+            case "Resonance":
+            case "SharedFate":
+            case "Synchronize":
+            case "Terraforming":
+            case "Voltaic":
+            case "Cascade":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, upgraded ? 2 : 1);
+                break;
+            case "Convergence":
+            case "Coordinate":
+            case "Flanking":
+            case "Monologue":
+            case "Shadowmeld":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, upgraded ? 2 : 1);
+                break;
+            case "CorrosiveWave":
+                ApplyAllEnemyDebuff(state, BuffId.Poison, upgraded ? 5 : 3, rng);
+                ApplyAllEnemyDebuff(state, BuffId.Weak, upgraded ? 3 : 2, rng);
+                break;
+            case "DaggerThrow":
+                DrawCards(state, 1, rng);
+                DiscardFirstCardsFromHand(state, 1);
+                break;
+            case "DeadlyPoison":
+            case "PoisonedStab":
+            case "Snakebite":
+                ApplyEnemyDebuff(state, BuffId.Poison, upgraded ? 7 : 5, rng);
+                break;
+            case "Defragment":
+            case "BiasedCognition":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Focus, upgraded ? 2 : 1);
+                break;
+            case "DualWield":
+            case "Nightmare":
+                DuplicateFirstCardInHand(state, upgraded ? 3 : 2);
+                break;
+            case "Dualcast":
+                ApplyOrbLikeValue(state, "Zap", upgraded);
+                ApplyOrbLikeValue(state, "Zap", upgraded);
+                break;
+            case "Dredge":
+                MoveDiscardCardsToHand(state, upgraded ? 2 : 1);
+                break;
+            case "EndOfDays":
+                DealUnpoweredDamageToAll(state, upgraded ? 37 : 29);
+                break;
+            case "DoubleEnergy":
+                state.Energy += Math.Max(0, state.Energy);
+                break;
+            case "EnfeeblingTouch":
+            case "Haze":
+            case "Scare":
+                ApplyEnemyDebuff(state, BuffId.Weak, upgraded ? 3 : 2, rng);
+                break;
+            case "Entrench":
+                GainBlock(state, state.PlayerBlock);
+                break;
+            case "Envenom":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Envenom, 1);
+                break;
+            case "Expertise":
+                DrawCards(state, Math.Max(0, (upgraded ? 7 : 6) - state.Hand.Count), rng);
+                break;
+            case "Expose":
+            case "Neutralize":
+            case "PiercingWail":
+            case "SuckerPunch":
+                ApplyEnemyDebuff(state, BuffId.Weak, upgraded ? 2 : 1, rng);
+                break;
+            case "Footwork":
+            case "Prowess":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Dexterity, upgraded ? 3 : 2);
+                break;
+            case "GeneticAlgorithm":
+            case "Stack":
+                GainBlock(state, upgraded ? state.DiscardPile.Count + 3 : state.DiscardPile.Count);
+                break;
+            case "Ignition":
+            case "Invoke":
+            case "MultiCast":
+            case "Quadcast":
+            case "Rainbow":
+                ApplyOrbLikeValue(state, "Zap", upgraded);
+                ApplyOrbLikeValue(state, "ColdSnap", upgraded);
+                break;
+            case "KnifeTrap":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Thorns, upgraded ? 6 : 4);
+                break;
+            case "LegionOfBone":
+            case "SummonForth":
+                AddRandomClassCardToHand(state, rng, freeThisTurn: true);
+                break;
+            case "Glimmer":
+            case "Glow":
+            case "Parse":
+            case "Prophesize":
+            case "Reflex":
+            case "Scourge":
+            case "Soul":
+            case "SpoilsOfBattle":
+                DrawCards(state, upgraded ? 2 : 1, rng);
+                break;
+            case "GoForTheEyes":
+                ApplyEnemyDebuff(state, BuffId.Weak, upgraded ? 2 : 1, rng);
+                break;
+            case "HiddenDaggers":
+                AddGeneratedCardsToHand(state, 430, upgraded ? 3 : 2);
+                break;
+            case "Hologram":
+                MoveDiscardCardsToHand(state, 1);
+                break;
+            case "InfiniteBlades":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.InfiniteBlades, 1);
+                break;
+            case "LegSweep":
+                ApplyEnemyDebuff(state, BuffId.Weak, upgraded ? 3 : 2, rng);
+                break;
+            case "Malaise":
+                ApplyTemporaryStrengthDownToEnemy(state, state.Energy);
+                ApplyEnemyDebuff(state, BuffId.Weak, state.Energy, rng);
+                state.Energy = 0;
+                break;
+            case "NoxiousFumes":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.NoxiousFumes, upgraded ? 3 : 2);
+                break;
+            case "Overclock":
+                DrawCards(state, upgraded ? 3 : 2, rng);
+                state.DiscardPile.Add(new CardInstance(10011, false));
+                break;
+            case "Outmaneuver":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.NextTurnEnergy, upgraded ? 3 : 2);
+                break;
+            case "Predator":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.NextTurnDraw, upgraded ? 3 : 2);
+                break;
+            case "Reboot":
+                DiscardFirstCardsFromHand(state, state.Hand.Count);
+                DrawCards(state, upgraded ? 6 : 4, rng);
+                break;
+            case "Reanimate":
+                MoveDiscardCardsToHand(state, upgraded ? 2 : 1);
+                break;
+            case "RefineBlade":
+                UpgradeFirstCardInHand(state);
+                break;
+            case "RoyalGamble":
+                state.Energy += upgraded ? 10 : 9;
+                break;
+            case "Scavenge":
+                ExhaustRandomCardFromHand(state, rng);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.NextTurnEnergy, upgraded ? 3 : 2);
+                break;
+            case "ShadowStep":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Intangible, 1);
+                break;
+            case "SignalBoost":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Focus, upgraded ? 2 : 1);
+                break;
+            case "Skim":
+                DrawCards(state, upgraded ? 4 : 3, rng);
+                break;
+            case "StormOfSteel":
+                int handCount = state.Hand.Count;
+                DiscardFirstCardsFromHand(state, handCount);
+                AddGeneratedCardsToHand(state, 430, handCount);
+                break;
+            case "Survivor":
+                DiscardFirstCardsFromHand(state, 1);
+                break;
+            case "Tactician":
+            case "Turbo":
+                state.Energy += upgraded ? 3 : 2;
+                break;
+            case "Tempest":
+                DealUnpoweredDamageToAll(state, state.Energy * (upgraded ? 6 : 4));
+                state.Energy = 0;
+                break;
+            case "Abrasive":
+            case "Accelerant":
+            case "Arsenal":
+            case "BulkUp":
+            case "Calcify":
+            case "ChildOfTheStars":
+            case "Feral":
+            case "Friendship":
+            case "Furnace":
+            case "Genesis":
+            case "HammerTime":
+            case "Lethality":
+            case "MasterPlanner":
+            case "MonarchsGaze":
+            case "NecroMastery":
+            case "Neurosurge":
+            case "NeutronAegis":
+            case "PaleBlueDot":
+            case "Parry":
+            case "ReaperForm":
+            case "Royalties":
+            case "SeekingEdge":
+            case "SerpentForm":
+            case "Sneaky":
+            case "SpectrumShift":
+            case "Speedster":
+            case "SpiritOfAsh":
+            case "Subroutine":
+            case "SwordSage":
+            case "TheSealedThrone":
+            case "Thunder":
+            case "Tracking":
+            case "TrashToTreasure":
+            case "Tyranny":
+            case "VoidForm":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, upgraded ? 2 : 1);
+                break;
+            case "BlackHole":
+            case "CallOfTheVoid":
+            case "ConsumingShadow":
+            case "Countdown":
+            case "DanseMacabre":
+            case "Demesne":
+            case "DevourLife":
+            case "ForbiddenGrimoire":
+            case "Haunt":
+            case "Outbreak":
+            case "Pagestorm":
+            case "PhantomBlades":
+            case "SentryMode":
+            case "Shroud":
+            case "SleightOfFlesh":
+            case "Smokestack":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.NextTurnDraw, upgraded ? 2 : 1);
+                break;
+            case "Buffer":
+            case "EchoForm":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Intangible, upgraded ? 2 : 1);
+                break;
+            case "Capacitor":
+            case "Hailstorm":
+            case "Iteration":
+            case "Loop":
+            case "MachineLearning":
+            case "Orbit":
+            case "Spinner":
+            case "Storm":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Focus, upgraded ? 2 : 1);
+                break;
+            case "CreativeAi":
+            case "FanOfKnives":
+            case "HelloWorld":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.InfiniteBlades, upgraded ? 2 : 1);
+                break;
+            case "CrescentSpear":
+            case "DeathMarch":
+            case "Flatten":
+            case "MementoMori":
+            case "Poke":
+            case "PreciseCut":
+            case "Rattle":
+            case "RightHandHand":
+            case "Snap":
+            case "Squeeze":
+            case "SweepingGaze":
+            case "TimesUp":
+                DealDamage(state, upgraded ? 12 : 8);
+                break;
+            case "Murder":
+            case "Supermassive":
+            case "TheScythe":
+                DealDamage(state, upgraded ? 35 : 25);
+                break;
+            case "Fetch":
+            case "HighFive":
+            case "Protector":
+            case "SicEm":
+            case "SoulStorm":
+            case "Unleash":
+                AddRandomClassCardToHand(state, rng, freeThisTurn: true);
+                DealDamage(state, upgraded ? 10 : 7);
+                break;
+            case "ToolsOfTheTrade":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.ToolsOfTheTrade, 1);
+                break;
+            case "Venerate":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, upgraded ? 2 : 1);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Dexterity, upgraded ? 2 : 1);
+                break;
+            case "WellLaidPlans":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, upgraded ? 2 : 1);
+                break;
+            case "Wish":
+                state.PlayerGold += upgraded ? 30 : 25;
+                break;
+            case "WraithForm":
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Intangible, upgraded ? 3 : 2);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Dexterity, -1);
+                break;
+        }
+    }
+
+    private static void ApplyBaseDamageAndBlock(
+        CardDef def,
+        bool upgraded,
+        CombatState state,
+        CardInstance card
+    )
+    {
+        int dmg = (upgraded ? def.BaseDamage + def.UpgradeDamage : def.BaseDamage) + card.Sharp;
+        if (def.Name == "Claw")
+            dmg += BuffSystem.Get(state.PlayerBuffs, BuffId.ClawDamage);
+        if (def.Name is "Shiv" or "HiddenDaggers")
+            dmg += BuffSystem.Get(state.PlayerBuffs, BuffId.ShivDamage);
+        int blk = (upgraded ? def.BaseBlock + def.UpgradeBlock : def.BaseBlock) + card.Nimble;
+        if (dmg > 0)
+            DealDamage(state, dmg);
+        if (blk > 0)
+            GainBlock(state, blk, isDefend: def.Name.Contains("Defend"));
+    }
 
     private static int Dmg(CardDef def, bool upgraded) =>
         upgraded ? def.BaseDamage + def.UpgradeDamage : def.BaseDamage;
@@ -1255,6 +1877,192 @@ public static class CardEffects
         }
     }
 
+    internal static void AddRandomAttackCardsToHand(CombatState state, int count, Random rng)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            if (state.Hand.Count >= MaxCardsInHand)
+                break;
+
+            int defId = _attackPool[rng.Next(_attackPool.Length)];
+            state.Hand.Add(new CardInstance(defId, false));
+        }
+    }
+
+    public static void DealUnpoweredDamageToAll(CombatState state, int amount)
+    {
+        foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToList())
+            DealUnpoweredDamageToEnemy(state, enemy, amount, triggerThorns: false);
+    }
+
+    public static void ApplyPoisonToAllEnemies(CombatState state, int amount, Random rng) =>
+        ApplyAllEnemyDebuff(state, BuffId.Poison, amount, rng);
+
+    public static void DiscardFirstCardsFromHand(CombatState state, int count)
+    {
+        for (int i = 0; i < count && state.Hand.Count > 0; i++)
+        {
+            var handCard = state.Hand[0];
+            state.Hand.RemoveAt(0);
+            state.DiscardPile.Add(handCard with { FreeThisTurn = false });
+        }
+    }
+
+    public static void AddGeneratedCardsToHand(CombatState state, int cardId, int count)
+    {
+        for (int i = 0; i < count && state.Hand.Count < MaxCardsInHand; i++)
+            state.Hand.Add(new CardInstance(cardId, false, FreeThisTurn: true));
+    }
+
+    private static int CountRendDebuffs(EnemyState enemy)
+    {
+        int count = 0;
+        foreach (var buff in enemy.Buffs)
+        {
+            if (
+                buff.Id
+                is BuffId.Vulnerable
+                    or BuffId.Weak
+                    or BuffId.Frail
+                    or BuffId.Poison
+                    or BuffId.Burn
+                    or BuffId.Shrink
+                    or BuffId.Tangled
+                    or BuffId.Constrict
+                    or BuffId.Smoggy
+                    or BuffId.Hex
+                    or BuffId.Dampen
+                    or BuffId.Disintegration
+            )
+                count++;
+        }
+        return count;
+    }
+
+    private static void AddRandomColorlessCardsToHand(CombatState state, int count, Random rng)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            if (state.Hand.Count >= MaxCardsInHand)
+                break;
+
+            int defId = _colorlessPool[rng.Next(_colorlessPool.Length)];
+            state.Hand.Add(new CardInstance(defId, false));
+        }
+    }
+
+    private static void AddRandomClassCardToHand(CombatState state, Random rng, bool freeThisTurn)
+    {
+        if (state.Hand.Count >= MaxCardsInHand)
+            return;
+
+        int defId = _generatedClassPool[rng.Next(_generatedClassPool.Length)];
+        state.Hand.Add(new CardInstance(defId, false, FreeThisTurn: freeThisTurn));
+    }
+
+    private static void DuplicateFirstCardInHand(CombatState state, int count)
+    {
+        if (state.Hand.Count == 0)
+            return;
+
+        var card = state.Hand[0];
+        for (int i = 0; i < count && state.Hand.Count < MaxCardsInHand; i++)
+            state.Hand.Add(card with { FreeThisTurn = true });
+    }
+
+    private static void ExhaustFirstCardsFromHand(CombatState state, int count, Random rng)
+    {
+        for (int i = 0; i < count && state.Hand.Count > 0; i++)
+        {
+            var handCard = state.Hand[0];
+            state.Hand.RemoveAt(0);
+            ExhaustCard(state, handCard, rng: rng);
+        }
+    }
+
+    private static void UpgradePile(List<CardInstance> pile)
+    {
+        for (int i = 0; i < pile.Count; i++)
+            if (IsUpgradable(pile[i]))
+                pile[i] = pile[i] with { Upgraded = true };
+    }
+
+    private static void MakeHandFreeThisTurn(CombatState state)
+    {
+        for (int i = 0; i < state.Hand.Count; i++)
+            state.Hand[i] = state.Hand[i] with { FreeThisTurn = true };
+    }
+
+    private static void ApplyOrbLikeValue(CombatState state, string cardName, bool upgraded)
+    {
+        int focus = BuffSystem.Get(state.PlayerBuffs, BuffId.Focus);
+        switch (cardName)
+        {
+            case "Zap":
+            case "BallLightning":
+            case "Chaos":
+            {
+                var target = FirstEnemy(state);
+                if (target != null)
+                    DealUnpoweredDamageToEnemy(target, Math.Max(0, (upgraded ? 10 : 8) + focus));
+                break;
+            }
+            case "ColdSnap":
+            case "Coolheaded":
+            case "Glacier":
+            case "Chill":
+            case "Coolant":
+                GainUnpoweredBlock(state, Math.Max(0, (upgraded ? 7 : 5) + focus));
+                break;
+            case "Darkness":
+                DealUnpoweredDamageToAll(state, Math.Max(0, (upgraded ? 9 : 6) + focus));
+                break;
+            case "Fusion":
+                state.Energy += upgraded ? 2 : 1;
+                break;
+        }
+    }
+
+    private static void MoveFirstDrawPileCardOfTypeToHand(CombatState state, CardType type)
+    {
+        if (state.Hand.Count >= MaxCardsInHand)
+            return;
+
+        int index = state.DrawPile.FindIndex(card =>
+            GeneratedData.Cards.Get(card.DefId).Type == type
+        );
+        if (index < 0)
+            return;
+
+        var drawCard = state.DrawPile[index];
+        state.DrawPile.RemoveAt(index);
+        state.Hand.Add(drawCard with { FreeThisTurn = false });
+    }
+
+    private static void MoveFirstHandCardToTopOfDrawPile(CombatState state)
+    {
+        if (state.Hand.Count == 0)
+            return;
+
+        var handCard = state.Hand[0];
+        state.Hand.RemoveAt(0);
+        state.DrawPile.Insert(0, handCard with { FreeThisTurn = false });
+    }
+
+    private static void MoveStratagemCardsToHandAfterShuffle(CombatState state)
+    {
+        int stratagem = BuffSystem.Get(state.PlayerBuffs, BuffId.StratagemPower);
+        for (int i = 0; i < stratagem && state.DrawPile.Count > 0; i++)
+        {
+            if (state.Hand.Count >= MaxCardsInHand)
+                return;
+
+            var drawCard = state.DrawPile[0];
+            state.DrawPile.RemoveAt(0);
+            state.Hand.Add(drawCard with { FreeThisTurn = false });
+        }
+    }
+
     private static readonly int[] _ironcladPool =
     [
         IC.Aggression,
@@ -1377,6 +2185,62 @@ public static class CardEffects
         IC.Unrelenting,
         IC.Uppercut,
         IC.Whirlwind,
+    ];
+
+    private static readonly int[] _attackPool = _infernalBladeAttackPool;
+
+    private static readonly int[] _generatedClassPool =
+    [
+        IC.StrikeIronclad,
+        IC.DefendIronclad,
+        IC.Bash,
+        24, // Backflip
+        42, // BladeDance
+        84, // ChargeBattery
+        93, // ColdSnap
+        104, // Coolheaded
+        117, // DaggerThrow
+        123, // DeadlyPoison
+        136, // Deflect
+        172, // EscapePlan
+        208, // Ftl
+        224, // GoForTheEyes
+        282, // Leap
+        323, // Neutralize
+        356, // PoisonedStab
+        361, // Predator
+        392, // Refract
+        410, // Scrape
+        439, // Slice
+        475, // StrikeSilent
+        545, // Zap
+    ];
+
+    private static readonly int[] _colorlessPool =
+    [
+        CL.Alchemize,
+        CL.Anointed,
+        CL.Bolas,
+        CL.DarkShackles,
+        CL.Discovery,
+        CL.DramaticEntrance,
+        CL.Finesse,
+        CL.FlashOfSteel,
+        CL.GangUp,
+        CL.GoldAxe,
+        CL.HandOfGreed,
+        CL.Impatience,
+        CL.JackOfAllTrades,
+        CL.MasterOfStrategy,
+        CL.MindBlast,
+        CL.Panache,
+        CL.PanicButton,
+        CL.Purity,
+        CL.Scrawl,
+        CL.SecretTechnique,
+        CL.SecretWeapon,
+        CL.Shockwave,
+        CL.ThinkingAhead,
     ];
 
     private static int CountStrikeCards(CombatState state)
@@ -1510,19 +2374,47 @@ public static class CL
 {
     public const int Alchemize = 10;
     public const int Anointed = 14;
+    public const int Automation = 23;
+    public const int BeaconOfHope = 32;
+    public const int BelieveInYou = 38;
     public const int Bolas = 51;
+    public const int Calamity = 73;
     public const int DarkShackles = 121;
     public const int Discovery = 146;
     public const int DramaticEntrance = 153;
-    public const int Entropy = 219;
-    public const int Fasten = 232;
-    public const int Omnislice = 333;
-
-    public const int Prolong = 366;
-    public const int Salvo = 406;
+    public const int Entropy = 168;
+    public const int EternalArmor = 173;
+    public const int Fasten = 181;
     public const int Finesse = 191;
     public const int FlashOfSteel = 197;
+    public const int GangUp = 213;
+    public const int GoldAxe = 225;
     public const int HandOfGreed = 234;
+    public const int HuddleUp = 255;
+    public const int Impatience = 260;
+    public const int JackOfAllTrades = 270;
+    public const int MasterOfStrategy = 297;
+    public const int Mayhem = 300;
+    public const int Mimic = 306;
+    public const int MindBlast = 307;
+    public const int Omnislice = 333;
+    public const int Panache = 342;
+    public const int PanicButton = 343;
+    public const int PrepTime = 363;
+    public const int Production = 365;
+    public const int Prolong = 366;
+    public const int Prowess = 369;
+    public const int Purity = 372;
+    public const int Rend = 394;
+    public const int RollingBoulder = 401;
+    public const int Salvo = 406;
+    public const int Scrawl = 411;
+    public const int SecretTechnique = 415;
+    public const int SecretWeapon = 416;
+    public const int Shockwave = 431;
+    public const int Stratagem = 470;
+    public const int TheBomb = 498;
+    public const int ThinkingAhead = 504;
     public const int Volley = 535;
 }
 

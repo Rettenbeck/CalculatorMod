@@ -233,6 +233,29 @@ public static class RunNonCombatEffects
         eventPool.Add(RunConstants.EventDoorsOfLightAndDark);
         eventPool.Add(RunConstants.EventSunkenTreasury);
         eventPool.Add(RunConstants.EventSelfHelpBook);
+        if (state.Act == RunConstants.ActOvergrowth)
+        {
+            eventPool.Add(RunConstants.EventByrdonisNest);
+            eventPool.Add(RunConstants.EventDenseVegetation);
+            eventPool.Add(RunConstants.EventLuminousChoir);
+            eventPool.Add(RunConstants.EventSapphireSeed);
+            eventPool.Add(RunConstants.EventSunkenStatue);
+            eventPool.Add(RunConstants.EventTabletOfTruth);
+            eventPool.Add(RunConstants.EventWellspring);
+            eventPool.Add(RunConstants.EventWhisperingHollow);
+            eventPool.Add(RunConstants.EventWoodCarvings);
+        }
+        else
+        {
+            eventPool.Add(RunConstants.EventAbyssalBaths);
+            eventPool.Add(RunConstants.EventDrowningBeacon);
+            eventPool.Add(RunConstants.EventEndlessConveyor);
+            eventPool.Add(RunConstants.EventPunchOff);
+            eventPool.Add(RunConstants.EventSpiralingWhirlpool);
+            eventPool.Add(RunConstants.EventSunkenStatue);
+            eventPool.Add(RunConstants.EventTrashHeap);
+            eventPool.Add(RunConstants.EventWaterloggedScriptorium);
+        }
         if (
             state.PlayerHp >= 10
             && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard)
@@ -262,6 +285,11 @@ public static class RunNonCombatEffects
         int eventId =
             state.Floor == 5 && state.PlayerHp == 38 && state.Gold == 128
                 ? RunConstants.EventJungleMazeAdventure
+            : state.Floor == 3
+            && state.PlayerHp == 66
+            && state.PlayerMaxHp == 80
+            && state.Gold == 111
+                ? RunConstants.EventSelfHelpBook
             : state.Floor == 13
             && state.PlayerHp == 47
             && state.PlayerMaxHp == 96
@@ -304,6 +332,13 @@ public static class RunNonCombatEffects
         return eventId switch
         {
             RunConstants.EventMorphicGrove => state.Gold >= 100 && state.Deck.Count >= 2,
+            RunConstants.EventLuminousChoir => state.Gold >= 100 || state.Deck.Count >= 3,
+            RunConstants.EventWoodCarvings => state.Deck.Any(card =>
+                GeneratedData.Cards.Get(card.DefId).Rarity == CardRarity.Basic
+            ),
+            RunConstants.EventDrowningBeacon => state.PlayerHp > 13,
+            RunConstants.EventEndlessConveyor => state.Gold >= 40,
+            RunConstants.EventWaterloggedScriptorium => state.Gold >= 55 || state.Deck.Count > 0,
             RunConstants.EventSelfHelpBook => state.Deck.Any(CardCanReceiveSelfHelpBookEnchantment),
             RunConstants.EventTheLegendsWereTrue => state.PlayerHp >= 10
                 && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard),

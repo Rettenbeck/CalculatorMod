@@ -53,6 +53,9 @@ public sealed class CombatState
     public bool SkillPlayedWhileSmoggy;
     public int AttackCardsPlayedThisTurn;
     public int AttackOrSkillCardsPlayedThisTurn;
+    public int CardsPlayedThisCombat;
+    public int DrawnCardsSinceAutomationProc;
+    public int CardsPlayedSincePanacheProc;
     public int BlockGainsThisTurn;
     public int PlayerHpLostThisTurn;
     public int CardsExhaustedThisTurn;
