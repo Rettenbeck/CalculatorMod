@@ -6,28 +6,28 @@ START_SECONDS="$SECONDS"
 
 UV="${UV:-uv}"
 if ! command -v "$UV" >/dev/null 2>&1; then
-    for candidate in \
-        "/mnt/c/Users/james/AppData/Local/Microsoft/WinGet/Packages/astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe/uv.exe" \
-        "/c/Users/james/AppData/Local/Microsoft/WinGet/Packages/astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe/uv.exe"
-    do
-        if [ -x "$candidate" ]; then
-            UV="$candidate"
-            break
-        fi
-    done
+  for candidate in \
+  "/mnt/c/Users/james/AppData/Local/Microsoft/WinGet/Packages/astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe/uv.exe" \
+  "/c/Users/james/AppData/Local/Microsoft/WinGet/Packages/astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe/uv.exe"
+  do
+    if [ -x "$candidate" ]; then
+      UV="$candidate"
+      break
+    fi
+  done
 fi
 
 DOTNET="${DOTNET:-dotnet}"
 if ! command -v "$DOTNET" >/dev/null 2>&1; then
-    for candidate in \
-        "/mnt/c/Program Files/dotnet/dotnet.exe" \
-        "/c/Program Files/dotnet/dotnet.exe"
-    do
-        if [ -x "$candidate" ]; then
-            DOTNET="$candidate"
-            break
-        fi
-    done
+  for candidate in \
+  "/mnt/c/Program Files/dotnet/dotnet.exe" \
+  "/c/Program Files/dotnet/dotnet.exe"
+  do
+    if [ -x "$candidate" ]; then
+      DOTNET="$candidate"
+      break
+    fi
+  done
 fi
 
 # Check Python formatting

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -42,141 +41,26 @@ def load_replay_commands(path: str) -> list[str]:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        if not is_runreplays_parseable_command(line):
-            continue
+        json.loads(line)
         commands.append(line)
     return commands
 
 
-def is_runreplays_parseable_command(command: str) -> bool:
-    command_text = command.split(" || ", 1)[0].split(" # ", 1)[0]
-    return command_text.startswith(
-        (
-            "PlayCard ",
-            "EndTurn",
-            "MoveToMapCoord ",
-            "ChooseRestSiteOption ",
-            "RestSiteOption ",
-            "ChooseEventOption ",
-            "ClaimReward ",
-            "TakeCard ",
-            "SelectGridCard ",
-            "SelectHandCards ",
-            "OpenShop",
-            "OpenFakeShop",
-            "BuyCard ",
-            "BuyRelic ",
-            "BuyCardRemoval",
-            "BuyPotion ",
-            "UsePotion ",
-            "DiscardPotion",
-            "ProceedToNextAct",
-            "OpenChest",
-            "TakeChestRelic",
-            "CrystalSphereClick",
-            "SelectCardFromScreen ",
-            "ProceedToMap",
-            "CloseShop",
-            "ClickGridCard ",
-            "ConfirmGridSelection",
-            "CancelGridSelection",
-            "SkipRewards",
-        ),
-    )
-
-
 def action_from_command(command: str) -> dict[str, Any]:
-    command_text = command.split(" || ", 1)[0]
-    payload: dict[str, Any] = {"run_replay_command": command}
+    payload = json.loads(command)
+    payload["run_replay_command"] = command
 
-    if match := re.match(r"^PlayCard\s+(\d+)(?:\s+(\d+))?", command_text):
-        payload["action"] = "play_card"
-        payload["combat_card_id"] = int(match.group(1))
-        if match.group(2) is not None:
-            payload["target"] = int(match.group(2))
-        return payload
-    if command_text.startswith("EndTurn"):
-        payload["action"] = "end_turn"
-        return payload
-    if match := re.match(r"^MoveToMapCoord\s+(-?\d+)", command_text):
-        payload["action"] = "choose_map_node"
-        payload["x"] = int(match.group(1))
-        return payload
-    if match := re.match(r"^ChooseEventOption\s+(-?\d+)", command_text):
-        payload["action"] = "choose_event_option"
-        payload["index"] = int(match.group(1))
-        return payload
-    if match := re.match(r"^ClaimReward\s+(-?\d+)", command_text):
-        payload["action"] = "claim_reward"
-        payload["index"] = int(match.group(1))
-        return payload
-    if match := re.match(r"^TakeCard\s+(\S+)", command_text):
-        choice = match.group(1).lower()
-        if choice == "skip":
-            payload["action"] = "skip_card_reward"
-        else:
-            payload["action"] = "take_card"
-            payload["index"] = int(choice) if choice.lstrip("-").isdigit() else choice
-        return payload
-    if match := re.match(r"^UsePotion\s+(\d+)(?:\s+(\d+))?", command_text):
-        payload["action"] = "use_potion"
-        payload["slot"] = int(match.group(1))
-        if match.group(2) is not None:
-            payload["target"] = int(match.group(2))
-        return payload
-    if command_text == "OpenShop":
-        payload["action"] = "open_shop"
-        return payload
-    if command_text.startswith("CloseShop"):
+    if payload.get("action") == "proceed":
         payload["action"] = "shop_option"
         payload["option"] = "proceed"
-        return payload
-    if match := re.match(r"^BuyCard\s+(.+)", command_text):
-        payload["action"] = "buy_card"
-        payload["name"] = match.group(1)
-        return payload
-    if match := re.match(r"^BuyRelic\s+(.+)", command_text):
-        payload["action"] = "buy_relic"
-        payload["name"] = match.group(1)
-        return payload
-    if match := re.match(r"^BuyPotion\s+(.+)", command_text):
-        payload["action"] = "buy_potion"
-        payload["name"] = match.group(1)
-        return payload
-    if command_text.startswith("BuyCardRemoval"):
-        payload["action"] = "buy_card_removal"
-        return payload
-    if match := re.match(r"^DiscardPotion(?:\s+(\d+))?", command_text):
-        payload["action"] = "discard_potion"
-        if match.group(1) is not None:
-            payload["slot"] = int(match.group(1))
-        return payload
-    if command_text.startswith("OpenChest"):
-        payload["action"] = "open_chest"
-        return payload
-    if command_text.startswith("TakeChestRelic"):
-        payload["action"] = "take_chest_relic"
-        return payload
-    if match := re.match(
-        r"^(?:ChooseRestSiteOption|RestSiteOption)\s+(\S+)",
-        command_text,
-    ):
-        payload["action"] = "choose_rest_site_option"
-        payload["option"] = match.group(1)
-        return payload
-    if match := re.match(r"^SelectGridCard\s+(.+)", command_text):
-        indices = [int(value) for value in re.findall(r"-?\d+", match.group(1))]
+    elif payload.get("action") == "select_card_reward":
+        payload["action"] = "take_card"
+        if "card_index" in payload:
+            payload["index"] = payload["card_index"]
+    elif payload.get("action") == "select_card" and "indices" in payload:
         payload["action"] = "select_grid_card"
-        payload["indices"] = indices
-        return payload
-    if command_text.startswith("ConfirmGridSelection"):
+    elif payload.get("action") == "confirm_selection":
         payload["action"] = "confirm_selection"
-        return payload
-    if command_text.startswith("ProceedToNextAct"):
-        payload["action"] = "proceed_to_next_act"
-        return payload
-
-    payload["action"] = command_text.split(" ", 1)[0]
     return payload
 
 
