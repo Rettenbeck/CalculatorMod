@@ -39,7 +39,8 @@ def load_trace(path: Path) -> list[dict[str, Any]]:
 
 
 def load_trace_from_payload(
-    payload: dict[str, Any], source: str = "<payload>",
+    payload: dict[str, Any],
+    source: str = "<payload>",
 ) -> list[dict[str, Any]]:
     trace = payload.get("trace")
     if not isinstance(trace, list):
@@ -55,7 +56,9 @@ def summary(step: dict[str, Any]) -> dict[str, Any]:
 
 
 def compare(
-    left: list[dict[str, Any]], right: list[dict[str, Any]], fields: list[str],
+    left: list[dict[str, Any]],
+    right: list[dict[str, Any]],
+    fields: list[str],
 ) -> list[str]:
     diffs: list[str] = []
     for index, (left_step, right_step) in enumerate(zip(left, right)):
@@ -91,13 +94,15 @@ def compare(
         for enemy_index, (left_enemy, right_enemy) in enumerate(
             zip(left_enemies, right_enemies),
         ):
-            for field in ("hp", "max_hp", "block"):
-                if left_enemy.get(field) != right_enemy.get(field):
-                    diffs.append(
-                        "step "
-                        f"{index} enemy {enemy_index} {field}: "
-                        f"left={left_enemy.get(field)!r} right={right_enemy.get(field)!r}",
-                    )
+            diffs.extend(
+                (
+                    "step "
+                    f"{index} enemy {enemy_index} {field}: "
+                    f"left={left_enemy.get(field)!r} right={right_enemy.get(field)!r}"
+                )
+                for field in ("hp", "max_hp", "block")
+                if left_enemy.get(field) != right_enemy.get(field)
+            )
     if len(left) != len(right):
         diffs.append(f"trace length: left={len(left)} right={len(right)}")
     return diffs
@@ -108,7 +113,10 @@ def main() -> None:
     parser.add_argument("left", type=Path)
     parser.add_argument("right", type=Path)
     parser.add_argument(
-        "--field", action="append", default=[], help="Additional dotted summary field",
+        "--field",
+        action="append",
+        default=[],
+        help="Additional dotted summary field",
     )
     parser.add_argument("--left-start", type=int, default=0)
     parser.add_argument("--right-start", type=int, default=0)

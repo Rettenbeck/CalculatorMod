@@ -94,7 +94,8 @@ def boundary_indices(trace: list[dict[str, Any]]) -> list[int]:
 
 
 def is_boundary_transition(
-    previous_summary: dict[str, Any] | None, current_summary: dict[str, Any],
+    previous_summary: dict[str, Any] | None,
+    current_summary: dict[str, Any],
 ) -> bool:
     if previous_summary is None:
         return True
@@ -151,20 +152,26 @@ def compare_boundary_snapshots(
 
         if reference_summary.get("state_type") in COMBAT_STATES:
             combat_diffs = compare_combat_boundary(
-                index, reference_summary, emulator_summary,
+                index,
+                reference_summary,
+                emulator_summary,
             )
             if combat_diffs and index > 0:
                 previous_emulator_summary = compare_traces.summary(emulator[index - 1])
                 same_combat_entry = previous_emulator_summary.get(
                     "state_type",
                 ) in COMBAT_STATES and compare_traces.get_path(
-                    previous_emulator_summary, "run.floor",
+                    previous_emulator_summary,
+                    "run.floor",
                 ) == compare_traces.get_path(
-                    reference_summary, "run.floor",
+                    reference_summary,
+                    "run.floor",
                 )
                 if same_combat_entry:
                     previous_combat_diffs = compare_combat_boundary(
-                        index, reference_summary, previous_emulator_summary,
+                        index,
+                        reference_summary,
+                        previous_emulator_summary,
                     )
                     if not previous_combat_diffs:
                         combat_diffs = []
@@ -173,7 +180,8 @@ def compare_boundary_snapshots(
 
 
 def reference_boundary_matches_terminal_emulator(
-    reference_step: dict[str, Any], emulator: list[dict[str, Any]],
+    reference_step: dict[str, Any],
+    emulator: list[dict[str, Any]],
 ) -> bool:
     if not emulator:
         return False
@@ -186,18 +194,24 @@ def reference_boundary_matches_terminal_emulator(
         return False
 
     return compare_traces.get_path(
-        reference_summary, "run.floor",
+        reference_summary,
+        "run.floor",
     ) == compare_traces.get_path(
-        emulator_summary, "run.floor",
+        emulator_summary,
+        "run.floor",
     ) and compare_traces.get_path(
-        reference_summary, "player.hp",
+        reference_summary,
+        "player.hp",
     ) == compare_traces.get_path(
-        emulator_summary, "player.hp",
+        emulator_summary,
+        "player.hp",
     )
 
 
 def compare_combat_boundary(
-    index: int, reference_summary: dict[str, Any], emulator_summary: dict[str, Any],
+    index: int,
+    reference_summary: dict[str, Any],
+    emulator_summary: dict[str, Any],
 ) -> list[str]:
     diffs: list[str] = []
     reference_enemies = (
@@ -206,20 +220,24 @@ def compare_combat_boundary(
     emulator_enemies = compare_traces.get_path(emulator_summary, "battle.enemies") or []
     if len(reference_enemies) != len(emulator_enemies):
         return [
-            f"step {index} enemy count: "
-            f"reference={len(reference_enemies)} emulator={len(emulator_enemies)}",
+            (
+                f"step {index} enemy count: "
+                f"reference={len(reference_enemies)} emulator={len(emulator_enemies)}"
+            ),
         ]
 
     for enemy_index, (reference_enemy, emulator_enemy) in enumerate(
         zip(reference_enemies, emulator_enemies),
     ):
-        for field in ("hp", "max_hp", "block"):
-            if reference_enemy.get(field) != emulator_enemy.get(field):
-                diffs.append(
-                    f"step {index} enemy {enemy_index} {field}: "
-                    f"reference={reference_enemy.get(field)!r} "
-                    f"emulator={emulator_enemy.get(field)!r}",
-                )
+        diffs.extend(
+            (
+                f"step {index} enemy {enemy_index} {field}: "
+                f"reference={reference_enemy.get(field)!r} "
+                f"emulator={emulator_enemy.get(field)!r}"
+            )
+            for field in ("hp", "max_hp", "block")
+            if reference_enemy.get(field) != emulator_enemy.get(field)
+        )
     return diffs
 
 
@@ -371,8 +389,6 @@ def execute_replay_action(
 
 def _normalize_enemy_name(name: str) -> str:
     """Convert 'Twig Slime (M)' → 'TWIG_SLIME_M' to match trace target prefixes."""
-    import re
-
     name = re.sub(r"[()]", "", name)
     name = name.strip().upper()
     return re.sub(r"\s+", "_", name)
@@ -567,7 +583,8 @@ def translate_action(
         if phase == PHASE_RELIC_REWARD:
             return 4 + int(
                 payload.get(
-                    "slot", payload.get("index", potion_slot_from_command(payload) or 0),
+                    "slot",
+                    payload.get("index", potion_slot_from_command(payload) or 0),
                 ),
             )
         return None
@@ -584,7 +601,8 @@ def translate_action(
 
 
 def resolve_removed_hand_index(
-    payload: dict[str, Any], reference_step: dict[str, Any] | None,
+    payload: dict[str, Any],
+    reference_step: dict[str, Any] | None,
 ) -> int | None:
     pre_hand = pre_action_hand_names(payload)
     if not pre_hand:
@@ -598,7 +616,7 @@ def resolve_removed_hand_index(
             .get("hand", [])
         )
     ]
-    for index, name in enumerate(pre_hand):
+    for index, _name in enumerate(pre_hand):
         candidate = pre_hand[:index] + pre_hand[index + 1 :]
         if candidate == post_hand:
             return index
@@ -662,7 +680,8 @@ def resolve_runreplays_card_index(payload: dict[str, Any], obs: np.ndarray) -> i
 
 
 def resolve_runreplays_card_index_or_none(
-    payload: dict[str, Any], obs: np.ndarray,
+    payload: dict[str, Any],
+    obs: np.ndarray,
 ) -> int | None:
     replay_id = replay_card_id(payload)
     if replay_id is None:
@@ -827,7 +846,10 @@ def summarize_env(obs: np.ndarray, info: dict[str, Any]) -> dict[str, Any]:
 
 
 def summarize_player(
-    obs: np.ndarray, info: dict[str, Any], *, in_combat: bool,
+    obs: np.ndarray,
+    info: dict[str, Any],
+    *,
+    in_combat: bool,
 ) -> dict[str, Any]:
     return {
         "hp": int(info["player_hp"]),
@@ -956,7 +978,8 @@ def main() -> None:
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
-            json.dumps(result.payload, indent=2) + "\n", encoding="utf-8",
+            json.dumps(result.payload, indent=2) + "\n",
+            encoding="utf-8",
         )
 
     diffs = compare_boundary_snapshots(

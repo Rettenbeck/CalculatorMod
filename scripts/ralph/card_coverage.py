@@ -40,7 +40,8 @@ CS_ARRAY_RE = re.compile(
 )
 CARD_RARITY_RE = re.compile(r"^\s*(?P<id>\d+):\s*CARD_RARITY_", re.MULTILINE)
 CARD_CONSTANT_RE = re.compile(
-    r"^(?P<name>[A-Z0-9_]*CARD[A-Z0-9_]*)\s*=\s*(?P<id>\d+)\s*$", re.MULTILINE,
+    r"^(?P<name>[A-Z0-9_]*CARD[A-Z0-9_]*)\s*=\s*(?P<id>\d+)\s*$",
+    re.MULTILINE,
 )
 
 CARD_CONTEXT_KEYS = {
@@ -377,7 +378,9 @@ def main() -> int:
     )
     parser.add_argument("--limit", type=int, default=25, help="maximum rows to print")
     parser.add_argument(
-        "--json", action="store_true", help="emit machine-readable JSON",
+        "--json",
+        action="store_true",
+        help="emit machine-readable JSON",
     )
     args = parser.parse_args()
 

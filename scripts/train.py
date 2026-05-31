@@ -1,6 +1,6 @@
 """Train MaskablePPO on Sts2CombatEnv or Sts2RunEnv."""
 
-import os
+import argparse
 import sys
 from pathlib import Path
 from typing import cast
@@ -25,8 +25,7 @@ def make_env(rank: int, use_run_env: bool):
         base_env: MaskableEnv = (
             Sts2RunEnv(seed=rank) if use_run_env else Sts2CombatEnv(seed=rank)
         )
-        env = ActionMasker(base_env, lambda e: cast("MaskableEnv", e).action_masks())
-        return env
+        return ActionMasker(base_env, lambda e: cast("MaskableEnv", e).action_masks())
 
     return _init
 
@@ -34,15 +33,15 @@ def make_env(rank: int, use_run_env: bool):
 # ── main ──────────────────────────────────────────────────────────────────────
 
 
-def main():
-    import argparse
-
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--timesteps", type=int, default=1_000_000)
     parser.add_argument("--n-envs", type=int, default=4)
     parser.add_argument("--save-path", type=str, default="checkpoints/maskable_ppo")
     parser.add_argument(
-        "--check", action="store_true", help="Run env sanity check then exit",
+        "--check",
+        action="store_true",
+        help="Run env sanity check then exit",
     )
     parser.add_argument(
         "--run-env",
@@ -58,7 +57,7 @@ def main():
         env.close()
         return
 
-    Path(os.path.dirname(args.save_path) or ".").mkdir(exist_ok=True, parents=True)
+    Path(args.save_path).parent.mkdir(exist_ok=True, parents=True)
 
     vec_env = DummyVecEnv([make_env(i, args.run_env) for i in range(args.n_envs)])
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Diff the current Generated/*.g.cs files against the previous git commit
-and print a human-readable change report.
+"""Diff the current Generated/*.g.cs files against the previous git commit.
+
+Print a human-readable change report.
 """
 
 import re
@@ -65,12 +66,14 @@ def diff_dicts(label: str, old: dict, new: dict, field_names: list[str]) -> list
         elif id_ not in new:
             lines.append(f"[REMOVED] {label} id={id_} \"{old[id_]['name']}\"")
         else:
-            for f in field_names:
-                if old[id_].get(f) != new[id_].get(f):
-                    lines.append(
-                        f"[CHANGED] {label} \"{new[id_]['name']}\": {f} "
-                        f"{old[id_].get(f)} → {new[id_].get(f)}",
-                    )
+            lines.extend(
+                (
+                    f"[CHANGED] {label} \"{new[id_]['name']}\": {f} "
+                    f"{old[id_].get(f)} → {new[id_].get(f)}"
+                )
+                for f in field_names
+                if old[id_].get(f) != new[id_].get(f)
+            )
     return lines
 
 
@@ -86,7 +89,8 @@ def main() -> None:
         path = GENERATED / filename
         if not path.exists():
             print(
-                f"  {filename} not found — run extract_data.py first.", file=sys.stderr,
+                f"  {filename} not found — run extract_data.py first.",
+                file=sys.stderr,
             )
             continue
 
@@ -99,8 +103,8 @@ def main() -> None:
         diffs = diff_dicts(label, previous, current, fields)
         changes.extend(diffs)
 
-        new_count = sum(1 for l in diffs if l.startswith("[NEW]"))
-        removed_count = sum(1 for l in diffs if l.startswith("[REMOVED]"))
+        new_count = sum(1 for line in diffs if line.startswith("[NEW]"))
+        removed_count = sum(1 for line in diffs if line.startswith("[REMOVED]"))
         if new_count:
             needs_review.append(f"{new_count} new {label.lower()}(s)")
         if removed_count:

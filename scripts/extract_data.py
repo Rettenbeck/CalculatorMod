@@ -17,7 +17,7 @@ RELICS_DIR = DECOMPILED / "MegaCrit.Sts2.Core.Models.Relics"
 
 # ── patterns ──────────────────────────────────────────────────────────────────
 
-# Constructor: base(cost, CardType.Attack, CardRarity.Common, ...)
+# Match card constructor arguments: cost, type, and rarity.
 CARD_CTOR = re.compile(r"base\((-?\d+),\s*CardType\.(\w+),\s*CardRarity\.(\w+)")
 # DamageVar(6m, ...) or DamageVar(6, ...)
 DAMAGE_VAR = re.compile(r"new DamageVar\((\d+(?:\.\d+)?)m?,")

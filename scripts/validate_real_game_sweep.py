@@ -132,7 +132,8 @@ def run_case(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--base-url", default=validate_real_game_trace.trace_real_game.DEFAULT_BASE_URL,
+        "--base-url",
+        default=validate_real_game_trace.trace_real_game.DEFAULT_BASE_URL,
     )
     parser.add_argument(
         "--suite",
@@ -167,7 +168,9 @@ def main() -> None:
         help="Run remaining cases after a failure instead of stopping immediately.",
     )
     parser.add_argument(
-        "--dry-run", action="store_true", help="Print selected cases only.",
+        "--dry-run",
+        action="store_true",
+        help="Print selected cases only.",
     )
     args = parser.parse_args()
 
@@ -223,7 +226,8 @@ def main() -> None:
         "results": results,
     }
     (output_dir / "summary.json").write_text(
-        json.dumps(summary, indent=2), encoding="utf-8",
+        json.dumps(summary, indent=2),
+        encoding="utf-8",
     )
     print(json.dumps({k: v for k, v in summary.items() if k != "results"}, indent=2))
 

@@ -19,8 +19,8 @@ replay_full_run_trace = importlib.util.module_from_spec(REPLAY_TRACE_SPEC)
 sys.modules["replay_full_run_trace"] = replay_full_run_trace
 REPLAY_TRACE_SPEC.loader.exec_module(replay_full_run_trace)
 
-from sts2_gym import Sts2CombatEnv, Sts2RunEnv, native
-from sts2_gym.run_env import (
+from sts2_gym import Sts2CombatEnv, Sts2RunEnv, native  # noqa: E402
+from sts2_gym.run_env import (  # noqa: E402
     NODE_NORMAL,
     PHASE_ANCIENT,
     PHASE_CARD_REWARD,
@@ -366,7 +366,8 @@ class Sts2GymTests(unittest.TestCase):
 
         self.assertIsNotNone(result.unsupported_action)
         self.assertIn(
-            "step 1: unsupported action 'select_card'", result.unsupported_action,
+            "step 1: unsupported action 'select_card'",
+            result.unsupported_action,
         )
         self.assertIn("reference state_type='card_select'", result.unsupported_action)
         self.assertIn("floor=1", result.unsupported_action)

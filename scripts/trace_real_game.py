@@ -170,7 +170,9 @@ def is_playable_state(state: dict[str, Any]) -> bool:
 
 
 def wait_for_state(
-    base_url: str, delay: float, wait_for_play_phase: bool = False,
+    base_url: str,
+    delay: float,
+    wait_for_play_phase: bool = False,
 ) -> dict[str, Any]:
     if delay > 0:
         time.sleep(delay)
@@ -190,10 +192,15 @@ def main() -> None:
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--actions", type=int, nargs="*", default=[])
     parser.add_argument(
-        "--post-actions", default=None, help="JSON list of raw STS2MCP POST payloads",
+        "--post-actions",
+        default=None,
+        help="JSON list of raw STS2MCP POST payloads",
     )
     parser.add_argument(
-        "--delay", type=float, default=0.25, help="Seconds to wait after each POST",
+        "--delay",
+        type=float,
+        default=0.25,
+        help="Seconds to wait after each POST",
     )
     parser.add_argument("--format", choices=["pretty", "compact"], default="pretty")
     args = parser.parse_args()

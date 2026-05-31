@@ -163,7 +163,8 @@ def wait_after_map_choice(base_url: str, delay: float) -> dict[str, Any]:
     deadline = time.monotonic() + 20.0
     while time.monotonic() < deadline:
         if state.get("state_type") != "map" and is_actionable_state(
-            state, min_combat_hand=5,
+            state,
+            min_combat_hand=5,
         ):
             return state
         time.sleep(0.25)
@@ -218,9 +219,7 @@ def is_actionable_state(state: dict[str, Any], *, min_combat_hand: int = 1) -> b
         return bool(rest_site.get("options")) or rest_site.get("can_proceed") is True
     if state_type == "rest":
         return bool(state.get("options") or state.get(state_type))
-    if state_type in {"card_select", "map"}:
-        return True
-    return False
+    return state_type in {"card_select", "map"}
 
 
 def choose_action(state: dict[str, Any], map_index: int) -> dict[str, Any] | None:
@@ -305,7 +304,8 @@ def incoming_attack_damage(state: dict[str, Any]) -> int:
 
 
 def best_lethal_attack(
-    state: dict[str, Any], playable: list[dict[str, Any]],
+    state: dict[str, Any],
+    playable: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
     enemies = [
         enemy
@@ -518,7 +518,10 @@ def choose_map_action(state: dict[str, Any], map_index: int) -> dict[str, Any]:
 
 
 def map_option_score(
-    state: dict[str, Any], option: Any, *, fallback_index: int,
+    state: dict[str, Any],
+    option: Any,
+    *,
+    fallback_index: int,
 ) -> tuple[int, int]:
     if not isinstance(option, dict):
         return (0, -fallback_index)
@@ -695,7 +698,9 @@ def capture_run(
         else:
             min_hand = 5 if payload["action"] == "end_turn" else 1
             state = wait_after_action_with_min_hand(
-                base_url, delay, min_combat_hand=min_hand,
+                base_url,
+                delay,
+                min_combat_hand=min_hand,
             )
         append_snapshot(trace, step, payload, result, state)
 

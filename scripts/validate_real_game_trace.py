@@ -349,7 +349,9 @@ def find_matching_seed(
 
 
 def capture_emulator_trace(
-    seed: int, encounter: str, actions: list[int],
+    seed: int,
+    encounter: str,
+    actions: list[int],
 ) -> dict[str, Any]:
     env = Sts2CombatEnv(seed=seed, encounter=encounter)
     try:
@@ -394,7 +396,10 @@ def capture_emulator_trace(
 
 
 def capture_live_trace(
-    base_url: str, actions: list[int], delay: float, card_select_index: int | None,
+    base_url: str,
+    actions: list[int],
+    delay: float,
+    card_select_index: int | None,
 ) -> dict[str, Any]:
     state = trace_real_game.get_state(base_url)
     trace = [
@@ -441,7 +446,8 @@ def wait_for_live_action_result(
     )
     while card_select_index is not None and state.get("state_type") == "card_select":
         trace_real_game.post_action(
-            base_url, {"action": "select_card", "index": card_select_index},
+            base_url,
+            {"action": "select_card", "index": card_select_index},
         )
         state = trace_real_game.wait_for_state(
             base_url,
@@ -472,7 +478,8 @@ def start_debug_encounter(
     battle = state.get("battle") or {}
     if battle.get("turn") == "player" and battle.get("is_play_phase") is not True:
         force_result = trace_real_game.post_action(
-            base_url, {"action": "debug_force_play_phase"},
+            base_url,
+            {"action": "debug_force_play_phase"},
         )
         if force_result.get("status") != "ok":
             raise RuntimeError(f"debug_force_play_phase failed: {force_result}")
@@ -550,7 +557,10 @@ def main() -> None:
 
     card_select_index = None if args.card_select_index < 0 else args.card_select_index
     live = capture_live_trace(
-        args.base_url, args.actions, args.delay, card_select_index,
+        args.base_url,
+        args.actions,
+        args.delay,
+        card_select_index,
     )
     live_summary = compare_traces.summary(live["trace"][0])
     validate_starter_player(live_summary)

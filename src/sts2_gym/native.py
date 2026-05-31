@@ -329,7 +329,11 @@ def reset_with_deck_and_encounter(
 ) -> None:
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
     _lib.Sts2_ResetWithDeckAndEncounter(
-        handle, deck_buf, len(deck_ids), encounter_id, obs_buf,
+        handle,
+        deck_buf,
+        len(deck_ids),
+        encounter_id,
+        obs_buf,
     )
 
 
@@ -362,7 +366,11 @@ def step(
 ) -> bool:
     if target_enemy_index >= 0:
         terminal = _lib.Sts2_StepTargeted(
-            handle, action, target_enemy_index, obs_buf, reward_buf,
+            handle,
+            action,
+            target_enemy_index,
+            obs_buf,
+            reward_buf,
         )
     else:
         terminal = _lib.Sts2_Step(handle, action, obs_buf, reward_buf)

@@ -27,7 +27,7 @@ def choose_action(env: EvaluatedEnv, policy: str) -> int:
     if policy == "end-turn":
         return int(valid[-1])
     if policy == "starter-aggressive":
-        valid_set = set(int(action) for action in valid)
+        valid_set = {int(action) for action in valid}
         hand_ids = [int(obs[i]) for i in HAND_ID_INDICES]
         for card_id in STARTER_AGGRESSIVE_PRIORITY:
             for action, hand_id in enumerate(hand_ids):

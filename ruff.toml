@@ -86,6 +86,31 @@ ignore = [
   # violating the principal of Locality of Behavior.
   "C901",
 
+  # missing-type-function-argument (ANN001), missing-return-type-undocumented-public-function
+  # (ANN201), missing-return-type-private-function (ANN202),
+  # missing-return-type-special-method (ANN204), any-type (ANN401)
+  # Type annotations are useful when they improve clarity, but the current Python layer is a mix of
+  # scripts, ctypes glue, and unittest code. Enforcing annotations everywhere would create noisy
+  # churn without improving emulator parity.
+  "ANN001",
+  "ANN201",
+  "ANN202",
+  "ANN204",
+  "ANN401",
+
+  # unused-function-argument (ARG001), unused-method-argument (ARG002)
+  # Some callback/test signatures intentionally include unused parameters.
+  "ARG001",
+  "ARG002",
+
+  # zip-without-explicit-strict (B905)
+  # Trace comparison code often zips intentionally after separate length handling.
+  "B905",
+
+  # missing-copyright-notice (CPY001)
+  # This repository does not currently use per-file copyright headers.
+  "CPY001",
+
   # undocumented-public-module (D100)
   # https://docs.astral.sh/ruff/rules/undocumented-public-module/
   # Requiring comments for self-documenting code is pointless.
@@ -142,9 +167,76 @@ ignore = [
   # See the comment for D100.
   "DOC201",
 
+  # line-too-long (E501)
+  # Black owns formatting; remaining long lines are mostly diagnostics, command strings, and trace
+  # literals where wrapping hurts readability.
+  "E501",
+
+  # raw-string-in-exception (EM101), f-string-in-exception (EM102)
+  # These make simple command-line scripts noisier without changing behavior.
+  "EM101",
+  "EM102",
+
+  # boolean-type-hint-positional-argument (FBT001),
+  # boolean-default-value-positional-argument (FBT002), boolean-positional-value-in-call (FBT003)
+  # The existing environment APIs use booleans in small, local Python wrappers.
+  "FBT001",
+  "FBT002",
+  "FBT003",
+
   # Line contains TODO
   # https://docs.astral.sh/ruff/rules/line-contains-todo/
   "FIX002",
+
+  # implicit-namespace-package (INP001)
+  # Scripts are intentionally standalone files, not import packages.
+  "INP001",
+
+  # too-many-return-statements (PLR0911), too-many-branches (PLR0912),
+  # too-many-arguments (PLR0913), too-many-locals (PLR0914), too-many-statements (PLR0915),
+  # too-many-positional-arguments (PLR0917), too-many-nested-blocks (PLR1702),
+  # magic-value-comparison (PLR2004), literal-membership (PLR6201)
+  # Emulator trace parsing and ctypes bindings are table-like and branch-heavy by nature.
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0914",
+  "PLR0915",
+  "PLR0917",
+  "PLR1702",
+  "PLR2004",
+  "PLR6201",
+
+  # global-statement (PLW0603), too-many-statements-in-try-clause (PLW0717),
+  # unspecified-encoding (PLW1514), subprocess-run-without-check (PLW1510),
+  # redefined-loop-name (PLW2901)
+  # These are acceptable in the current small command-line scripts and tests.
+  "PLW0603",
+  "PLW0717",
+  "PLW1510",
+  "PLW1514",
+  "PLW2901",
+
+  # use-regular-assert (PT009)
+  # The Python tests are unittest-based.
+  "PT009",
+
+  # mutable-class-default (RUF012)
+  # Existing ctypes structure metadata follows the standard ctypes class attribute style.
+  "RUF012",
+
+  # assert (S101), suspicious-url-open-usage (S310), suspicious-subprocess-import (S404),
+  # subprocess-without-shell-equals-true (S603), start-process-with-partial-path (S607)
+  # These scripts are local developer tools that call local APIs and local commands.
+  "S101",
+  "S310",
+  "S404",
+  "S603",
+  "S607",
+
+  # private-member-access (SLF001)
+  # Tests may inspect implementation details.
+  "SLF001",
 
   # print (T201)
   # https://docs.astral.sh/ruff/rules/print/
@@ -158,4 +250,13 @@ ignore = [
   # Missing issue link for TODO
   # https://docs.astral.sh/ruff/rules/missing-todo-link/
   "TD003",
+
+  # typing-only-standard-library-import (TC003)
+  # Avoid extra type-checking import blocks in compact scripts.
+  "TC003",
+
+  # raise-vanilla-args (TRY003), type-check-without-type-error (TRY004)
+  # Simple built-in exceptions keep command-line scripts straightforward.
+  "TRY003",
+  "TRY004",
 ]

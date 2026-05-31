@@ -78,7 +78,9 @@ def main() -> None:
     args = parser.parse_args()
 
     env = Sts2CombatEnv(
-        seed=args.seed, max_episode_steps=args.max_steps, encounter=args.encounter,
+        seed=args.seed,
+        max_episode_steps=args.max_steps,
+        encounter=args.encounter,
     )
     try:
         obs, info = env.reset()

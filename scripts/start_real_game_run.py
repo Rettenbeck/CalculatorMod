@@ -84,7 +84,9 @@ def option_names(state: dict[str, Any]) -> set[str]:
 
 
 def wait_for_menu(
-    base_url: str, menu_screen: str, timeout: float = 10.0,
+    base_url: str,
+    menu_screen: str,
+    timeout: float = 10.0,
 ) -> dict[str, Any]:
     deadline = time.monotonic() + timeout
     state = get_state(base_url)
@@ -115,7 +117,9 @@ def wait_for_run(base_url: str, seed: str, timeout: float = 30.0) -> dict[str, A
 
 
 def wait_for_state_type(
-    base_url: str, state_types: set[str], timeout: float = 30.0,
+    base_url: str,
+    state_types: set[str],
+    timeout: float = 30.0,
 ) -> dict[str, Any]:
     deadline = time.monotonic() + timeout
     state = get_state(base_url)
@@ -205,7 +209,8 @@ def enter_first_combat(
     map_index: int,
 ) -> dict[str, Any]:
     state = wait_for_state_type(
-        base_url, {"event", "rewards", "map", "monster", "elite", "boss"},
+        base_url,
+        {"event", "rewards", "map", "monster", "elite", "boss"},
     )
     if state.get("state_type") == "event":
         state = wait_for_event_options(base_url)

@@ -17,6 +17,19 @@ if ! command -v "$UV" >/dev/null 2>&1; then
     done
 fi
 
+DOTNET="${DOTNET:-dotnet}"
+if ! command -v "$DOTNET" >/dev/null 2>&1; then
+    for candidate in \
+        "/mnt/c/Program Files/dotnet/dotnet.exe" \
+        "/c/Program Files/dotnet/dotnet.exe"
+    do
+        if [ -x "$candidate" ]; then
+            DOTNET="$candidate"
+            break
+        fi
+    done
+fi
+
 # Check Python formatting
 "$UV" run black . --check --target-version py314
 
@@ -27,11 +40,11 @@ fi
 "$UV" run ty check .
 
 # Check C# formatting
-dotnet csharpier check .
+"$DOTNET" csharpier check .
 
 # Build C#
-dotnet build src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --configuration Release
-dotnet publish src/Sts2Emulator/Sts2Emulator.csproj -c Release -r win-x64 --self-contained -o out --nologo
+"$DOTNET" build src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --configuration Release
+"$DOTNET" publish src/Sts2Emulator/Sts2Emulator.csproj -c Release -r win-x64 --self-contained -o out --nologo
 
 # Test Python
 "$UV" run python -m unittest tests/python/test_sts2_gym.py
@@ -39,7 +52,7 @@ dotnet publish src/Sts2Emulator/Sts2Emulator.csproj -c Release -r win-x64 --self
 "$UV" run python scripts/evaluate.py --episodes 2 --run-env --policy first-valid --max-episode-steps 20
 
 # Test the emulator
-dotnet test src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --nologo
+"$DOTNET" test src/Sts2Emulator.Tests/Sts2Emulator.Tests.csproj --nologo
 
 ELAPSED_SECONDS="$((SECONDS - START_SECONDS))"
 echo -e "\n$0 successfully completed in $ELAPSED_SECONDS seconds."

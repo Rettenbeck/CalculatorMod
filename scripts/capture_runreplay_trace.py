@@ -162,7 +162,8 @@ def action_from_command(command: str) -> dict[str, Any]:
         payload["action"] = "take_chest_relic"
         return payload
     if match := re.match(
-        r"^(?:ChooseRestSiteOption|RestSiteOption)\s+(\S+)", command_text,
+        r"^(?:ChooseRestSiteOption|RestSiteOption)\s+(\S+)",
+        command_text,
     ):
         payload["action"] = "choose_rest_site_option"
         payload["option"] = match.group(1)
