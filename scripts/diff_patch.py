@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Diff the current Generated/*.g.cs files against the previous git commit
+"""Diff the current Generated/*.g.cs files against the previous git commit
 and print a human-readable change report.
 """
 
@@ -14,10 +13,10 @@ GENERATED = REPO / "src" / "Sts2Emulator" / "Generated"
 
 # Patterns to parse entries from generated files
 CARD_RE = re.compile(
-    r'new CardDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*Cost:\s*(\d+),\s*BaseDamage:\s*(\d+),\s*BaseBlock:\s*(\d+)'
+    r'new CardDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*Cost:\s*(\d+),\s*BaseDamage:\s*(\d+),\s*BaseBlock:\s*(\d+)',
 )
 ENEMY_RE = re.compile(
-    r'new EnemyDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*MinHp:\s*(\d+),\s*MaxHp:\s*(\d+)'
+    r'new EnemyDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)",\s*MinHp:\s*(\d+),\s*MaxHp:\s*(\d+)',
 )
 RELIC_RE = re.compile(r'new RelicDef\(Id:\s*(\d+),\s*Name:\s*"([^"]+)"\)')
 
@@ -70,7 +69,7 @@ def diff_dicts(label: str, old: dict, new: dict, field_names: list[str]) -> list
                 if old[id_].get(f) != new[id_].get(f):
                     lines.append(
                         f"[CHANGED] {label} \"{new[id_]['name']}\": {f} "
-                        f"{old[id_].get(f)} → {new[id_].get(f)}"
+                        f"{old[id_].get(f)} → {new[id_].get(f)}",
                     )
     return lines
 
@@ -87,7 +86,7 @@ def main() -> None:
         path = GENERATED / filename
         if not path.exists():
             print(
-                f"  {filename} not found — run extract_data.py first.", file=sys.stderr
+                f"  {filename} not found — run extract_data.py first.", file=sys.stderr,
             )
             continue
 

@@ -9,8 +9,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from sts2_gym import Sts2CombatEnv
-from sts2_gym import native
+from sts2_gym import Sts2CombatEnv, native
 
 
 def summarize_observation(obs: np.ndarray) -> dict:
@@ -47,7 +46,7 @@ def summarize_observation(obs: np.ndarray) -> dict:
                 "secondary_intent_type": int(obs[144 + enemy_index * 2]),
                 "secondary_intent_magnitude": int(obs[145 + enemy_index * 2]),
                 "status": buffs,
-            }
+            },
         )
     return {
         "player": {
@@ -79,7 +78,7 @@ def main() -> None:
     args = parser.parse_args()
 
     env = Sts2CombatEnv(
-        seed=args.seed, max_episode_steps=args.max_steps, encounter=args.encounter
+        seed=args.seed, max_episode_steps=args.max_steps, encounter=args.encounter,
     )
     try:
         obs, info = env.reset()
@@ -94,7 +93,7 @@ def main() -> None:
                 "observation": obs.tolist(),
                 "summary": summarize_observation(obs),
                 "info": info,
-            }
+            },
         ]
 
         for step, action in enumerate(args.actions, start=1):
@@ -112,7 +111,7 @@ def main() -> None:
                     "observation": obs.tolist(),
                     "summary": summarize_observation(obs),
                     "info": info,
-                }
+                },
             )
             if terminated or truncated:
                 break
@@ -121,7 +120,7 @@ def main() -> None:
             json.dumps(
                 {"seed": args.seed, "encounter": args.encounter, "trace": trace},
                 indent=2,
-            )
+            ),
         )
     finally:
         env.close()

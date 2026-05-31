@@ -1,18 +1,17 @@
 """Train MaskablePPO on Sts2CombatEnv or Sts2RunEnv."""
 
-import sys
 import os
+import sys
 from pathlib import Path
 from typing import cast
 
 # Allow running from project root: python scripts/train.py
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-import gymnasium as gym
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker
+from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.vec_env import DummyVecEnv
 
 from sts2_gym import Sts2CombatEnv, Sts2RunEnv
 
@@ -26,7 +25,7 @@ def make_env(rank: int, use_run_env: bool):
         base_env: MaskableEnv = (
             Sts2RunEnv(seed=rank) if use_run_env else Sts2CombatEnv(seed=rank)
         )
-        env = ActionMasker(base_env, lambda e: cast(MaskableEnv, e).action_masks())
+        env = ActionMasker(base_env, lambda e: cast("MaskableEnv", e).action_masks())
         return env
 
     return _init
@@ -43,7 +42,7 @@ def main():
     parser.add_argument("--n-envs", type=int, default=4)
     parser.add_argument("--save-path", type=str, default="checkpoints/maskable_ppo")
     parser.add_argument(
-        "--check", action="store_true", help="Run env sanity check then exit"
+        "--check", action="store_true", help="Run env sanity check then exit",
     )
     parser.add_argument(
         "--run-env",
@@ -59,7 +58,7 @@ def main():
         env.close()
         return
 
-    os.makedirs(os.path.dirname(args.save_path) or ".", exist_ok=True)
+    Path(os.path.dirname(args.save_path) or ".").mkdir(exist_ok=True, parents=True)
 
     vec_env = DummyVecEnv([make_env(i, args.run_env) for i in range(args.n_envs)])
 

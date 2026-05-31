@@ -185,6 +185,6 @@ class Sts2RunEnv(gym.Env):
             "player_won": native.run_player_won(self._run_handle),
             "encounter_id": native.run_encounter_id(self._run_handle),
             "encounter": ENCOUNTER_NAMES.get(
-                native.run_encounter_id(self._run_handle), "none"
+                native.run_encounter_id(self._run_handle), "none",
             ),
         }

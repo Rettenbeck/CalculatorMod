@@ -12,11 +12,11 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from sts2_gym import Sts2CombatEnv
-
 import compare_traces
 import start_real_game_run
 import trace_real_game
+
+from sts2_gym import Sts2CombatEnv
 
 
 def load_emulator_trace_module() -> ModuleType:
@@ -164,7 +164,7 @@ def live_hand_ids(summary: dict[str, Any]) -> list[int]:
         if card_id is None:
             raise ValueError(
                 f"Live hand contains unsupported card {card.get('id')!r}; "
-                "choose a Neow option that preserves the starter deck."
+                "choose a Neow option that preserves the starter deck.",
             )
         hand.append(card_id)
     return hand
@@ -177,7 +177,7 @@ def validate_starter_player(summary: dict[str, Any]) -> None:
     if (hp, max_hp) != (64, 80):
         raise ValueError(
             f"Live run has {hp}/{max_hp} HP, expected max-ascension starter "
-            "64/80. Choose a Neow option that does not change HP."
+            "64/80. Choose a Neow option that does not change HP.",
         )
     piles = (
         player.get("draw_pile_count"),
@@ -188,7 +188,7 @@ def validate_starter_player(summary: dict[str, Any]) -> None:
         raise ValueError(
             f"Live run has pile counts draw/discard/exhaust={piles}, expected "
             "starter deck counts (6, 0, 0). Choose a Neow option that does not "
-            "add, remove, transform, or create cards."
+            "add, remove, transform, or create cards.",
         )
 
 
@@ -340,16 +340,16 @@ def find_matching_seed(
     if first_opening_match is not None:
         raise ValueError(
             f"No emulator seed below {limit} matched live {encounter} full trace; "
-            f"first opening-only match was seed {first_opening_match}"
+            f"first opening-only match was seed {first_opening_match}",
         )
     raise ValueError(
         f"No emulator seed below {limit} matched live {encounter} opening state: "
-        f"{format_opening_summary(live_summary)}"
+        f"{format_opening_summary(live_summary)}",
     )
 
 
 def capture_emulator_trace(
-    seed: int, encounter: str, actions: list[int]
+    seed: int, encounter: str, actions: list[int],
 ) -> dict[str, Any]:
     env = Sts2CombatEnv(seed=seed, encounter=encounter)
     try:
@@ -365,7 +365,7 @@ def capture_emulator_trace(
                 "observation": obs.tolist(),
                 "summary": emulator_trace.summarize_observation(obs),
                 "info": info,
-            }
+            },
         ]
         for step, action in enumerate(actions, start=1):
             obs, reward, terminated, truncated, info = env.step(action)
@@ -384,7 +384,7 @@ def capture_emulator_trace(
                     "observation": obs.tolist(),
                     "summary": emulator_trace.summarize_observation(obs),
                     "info": info,
-                }
+                },
             )
             if terminated or truncated:
                 break
@@ -394,7 +394,7 @@ def capture_emulator_trace(
 
 
 def capture_live_trace(
-    base_url: str, actions: list[int], delay: float, card_select_index: int | None
+    base_url: str, actions: list[int], delay: float, card_select_index: int | None,
 ) -> dict[str, Any]:
     state = trace_real_game.get_state(base_url)
     trace = [
@@ -404,7 +404,7 @@ def capture_live_trace(
             "post": None,
             "summary": trace_real_game.summarize_state(state),
             "raw_state": state,
-        }
+        },
     ]
     for step, action in enumerate(actions, start=1):
         payload = trace_real_game.action_payload_from_index(state, action)
@@ -423,7 +423,7 @@ def capture_live_trace(
                 "post_result": post_result,
                 "summary": trace_real_game.summarize_state(state),
                 "raw_state": state,
-            }
+            },
         )
     return {"source": "sts2mcp", "base_url": base_url, "trace": trace}
 
@@ -441,7 +441,7 @@ def wait_for_live_action_result(
     )
     while card_select_index is not None and state.get("state_type") == "card_select":
         trace_real_game.post_action(
-            base_url, {"action": "select_card", "index": card_select_index}
+            base_url, {"action": "select_card", "index": card_select_index},
         )
         state = trace_real_game.wait_for_state(
             base_url,
@@ -472,7 +472,7 @@ def start_debug_encounter(
     battle = state.get("battle") or {}
     if battle.get("turn") == "player" and battle.get("is_play_phase") is not True:
         force_result = trace_real_game.post_action(
-            base_url, {"action": "debug_force_play_phase"}
+            base_url, {"action": "debug_force_play_phase"},
         )
         if force_result.get("status") != "ok":
             raise RuntimeError(f"debug_force_play_phase failed: {force_result}")
@@ -534,11 +534,11 @@ def main() -> None:
             )
         else:
             live_encounter = args.live_encounter or LIVE_ENCOUNTER_BY_EMULATOR.get(
-                args.encounter
+                args.encounter,
             )
             if live_encounter is None:
                 raise ValueError(
-                    f"No live encounter mapping for {args.encounter!r}; pass --live-encounter."
+                    f"No live encounter mapping for {args.encounter!r}; pass --live-encounter.",
                 )
             start_debug_encounter(
                 args.base_url,
@@ -550,7 +550,7 @@ def main() -> None:
 
     card_select_index = None if args.card_select_index < 0 else args.card_select_index
     live = capture_live_trace(
-        args.base_url, args.actions, args.delay, card_select_index
+        args.base_url, args.actions, args.delay, card_select_index,
     )
     live_summary = compare_traces.summary(live["trace"][0])
     validate_starter_player(live_summary)
@@ -594,7 +594,7 @@ def main() -> None:
                 "diff_count": len(diffs),
             },
             indent=2,
-        )
+        ),
     )
     if diffs:
         raise SystemExit(1)

@@ -1,8 +1,9 @@
 """Gymnasium environment wrapping the Sts2Emulator native library."""
 
 import ctypes
-import numpy as np
+
 import gymnasium as gym
+import numpy as np
 from gymnasium import spaces
 
 from . import native
@@ -193,5 +194,5 @@ class Sts2CombatEnv(gym.Env):
         except KeyError as exc:
             valid = ", ".join(sorted(ENCOUNTER_IDS))
             raise ValueError(
-                f"Unknown encounter '{encounter}'. Valid encounters: {valid}"
+                f"Unknown encounter '{encounter}'. Valid encounters: {valid}",
             ) from exc

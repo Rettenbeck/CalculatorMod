@@ -47,7 +47,7 @@ def _assert_native_library_is_fresh(path: Path) -> None:
         f"`bash scripts/build.sh win-x64` or `dotnet publish "
         f'"src\\Sts2Emulator\\Sts2Emulator.csproj" -c Release -r win-x64 '
         f'--self-contained -o "out"`. Set {_ALLOW_STALE_ENV}=1 only when '
-        "intentionally testing an older native build."
+        "intentionally testing an older native build.",
     )
 
 
@@ -60,7 +60,7 @@ def _assert_native_api_version(lib: ctypes.CDLL, path: Path) -> None:
             "these Python bindings. Rebuild the native library with "
             "`bash scripts/build.sh win-x64` or `dotnet publish "
             '"src\\Sts2Emulator\\Sts2Emulator.csproj" -c Release -r win-x64 '
-            '--self-contained -o "out"`.'
+            '--self-contained -o "out"`.',
         ) from exc
 
     version_func.restype = ctypes.c_int
@@ -72,7 +72,7 @@ def _assert_native_api_version(lib: ctypes.CDLL, path: Path) -> None:
             f"sts2_gym requires {_REQUIRED_NATIVE_API_VERSION}. Rebuild the "
             "native library with `bash scripts/build.sh win-x64` or "
             '`dotnet publish "src\\Sts2Emulator\\Sts2Emulator.csproj" '
-            '-c Release -r win-x64 --self-contained -o "out"`.'
+            '-c Release -r win-x64 --self-contained -o "out"`.',
         )
 
     try:
@@ -83,7 +83,7 @@ def _assert_native_api_version(lib: ctypes.CDLL, path: Path) -> None:
             "for these Python bindings. Rebuild the native library with "
             "`bash scripts/build.sh win-x64` or `dotnet publish "
             '"src\\Sts2Emulator\\Sts2Emulator.csproj" -c Release -r win-x64 '
-            '--self-contained -o "out"`.'
+            '--self-contained -o "out"`.',
         ) from exc
 
     run_version_func.restype = ctypes.c_int
@@ -95,7 +95,7 @@ def _assert_native_api_version(lib: ctypes.CDLL, path: Path) -> None:
             f"sts2_gym requires {_REQUIRED_RUN_NATIVE_API_VERSION}. Rebuild "
             "the native library with `bash scripts/build.sh win-x64` or "
             '`dotnet publish "src\\Sts2Emulator\\Sts2Emulator.csproj" '
-            '-c Release -r win-x64 --self-contained -o "out"`.'
+            '-c Release -r win-x64 --self-contained -o "out"`.',
         )
 
 
@@ -115,7 +115,7 @@ def _load_lib() -> ctypes.CDLL:
             _assert_native_api_version(lib, path)
             return lib
     raise FileNotFoundError(
-        f"Could not find {name}. Run scripts/build.sh first, or set STS2_LIB_PATH."
+        f"Could not find {name}. Run scripts/build.sh first, or set STS2_LIB_PATH.",
     )
 
 
@@ -329,7 +329,7 @@ def reset_with_deck_and_encounter(
 ) -> None:
     deck_buf = (ctypes.c_int * len(deck_ids))(*deck_ids)
     _lib.Sts2_ResetWithDeckAndEncounter(
-        handle, deck_buf, len(deck_ids), encounter_id, obs_buf
+        handle, deck_buf, len(deck_ids), encounter_id, obs_buf,
     )
 
 
@@ -362,7 +362,7 @@ def step(
 ) -> bool:
     if target_enemy_index >= 0:
         terminal = _lib.Sts2_StepTargeted(
-            handle, action, target_enemy_index, obs_buf, reward_buf
+            handle, action, target_enemy_index, obs_buf, reward_buf,
         )
     else:
         terminal = _lib.Sts2_Step(handle, action, obs_buf, reward_buf)
@@ -415,7 +415,7 @@ def run_step(
             reward_buf,
             terminal_buf,
             truncated_buf,
-        )
+        ),
     )
 
 
@@ -449,7 +449,7 @@ def run_start_combat(
             player_gold,
             completed_combat_rooms_before_current,
             obs_buf,
-        )
+        ),
     )
 
 
@@ -474,7 +474,7 @@ def run_state_list(handle: int, list_id: int, capacity: int = 256) -> tuple[int,
     count = int(_lib.Sts2Run_GetStateList(handle, list_id, buf, capacity))
     if count < 0:
         raise RuntimeError(
-            f"Sts2Run_GetStateList failed with status {count} for list {list_id}."
+            f"Sts2Run_GetStateList failed with status {count} for list {list_id}.",
         )
     return tuple(int(buf[i]) for i in range(min(count, capacity)))
 

@@ -5,7 +5,7 @@ import json
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.request import Request, urlopen
@@ -85,7 +85,7 @@ def is_runreplays_parseable_command(command: str) -> bool:
             "ConfirmGridSelection",
             "CancelGridSelection",
             "SkipRewards",
-        )
+        ),
     )
 
 
@@ -162,7 +162,7 @@ def action_from_command(command: str) -> dict[str, Any]:
         payload["action"] = "take_chest_relic"
         return payload
     if match := re.match(
-        r"^(?:ChooseRestSiteOption|RestSiteOption)\s+(\S+)", command_text
+        r"^(?:ChooseRestSiteOption|RestSiteOption)\s+(\S+)", command_text,
     ):
         payload["action"] = "choose_rest_site_option"
         payload["option"] = match.group(1)
@@ -199,7 +199,7 @@ def append_snapshot(
             "summary": compact_state(state),
             "raw_state": state,
             "note": note,
-        }
+        },
     )
 
 
@@ -293,7 +293,7 @@ def main() -> None:
         "replay_log_path": entry.get("minimal_log_path"),
         "raw_command_count": len(commands),
         "loaded_command_count": status.get("loaded_count"),
-        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "captured_at": datetime.now(UTC).isoformat(),
         "trace": trace,
     }
     text = json.dumps(result, indent=None if args.format == "compact" else 2)

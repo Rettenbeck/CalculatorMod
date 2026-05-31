@@ -29,11 +29,11 @@ def request_json(
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(
-            f"{method} {path} failed with HTTP {exc.code}: {detail}"
+            f"{method} {path} failed with HTTP {exc.code}: {detail}",
         ) from exc
     except URLError as exc:
         raise RuntimeError(
-            f"Could not reach STS2MCP at {base_url}: {exc.reason}"
+            f"Could not reach STS2MCP at {base_url}: {exc.reason}",
         ) from exc
 
 
@@ -84,7 +84,7 @@ def option_names(state: dict[str, Any]) -> set[str]:
 
 
 def wait_for_menu(
-    base_url: str, menu_screen: str, timeout: float = 10.0
+    base_url: str, menu_screen: str, timeout: float = 10.0,
 ) -> dict[str, Any]:
     deadline = time.monotonic() + timeout
     state = get_state(base_url)
@@ -110,12 +110,12 @@ def wait_for_run(base_url: str, seed: str, timeout: float = 30.0) -> dict[str, A
         state = get_state(base_url)
     observed = current_run_seed(base_url)
     raise RuntimeError(
-        f"Timed out waiting for seeded run {seed!r}; observed {observed!r}"
+        f"Timed out waiting for seeded run {seed!r}; observed {observed!r}",
     )
 
 
 def wait_for_state_type(
-    base_url: str, state_types: set[str], timeout: float = 30.0
+    base_url: str, state_types: set[str], timeout: float = 30.0,
 ) -> dict[str, Any]:
     deadline = time.monotonic() + timeout
     state = get_state(base_url)
@@ -146,7 +146,7 @@ def wait_for_event_options(base_url: str, timeout: float = 10.0) -> dict[str, An
     state = get_state(base_url)
     while time.monotonic() < deadline:
         if state.get("state_type") == "event" and (state.get("event") or {}).get(
-            "options"
+            "options",
         ):
             return state
         time.sleep(0.25)
@@ -185,7 +185,7 @@ def start_seeded_run(
         if not abandon_existing:
             raise RuntimeError(
                 "Main menu has no singleplayer option, likely because a run exists. "
-                "Use --abandon-existing to replace it."
+                "Use --abandon-existing to replace it.",
             )
         abandon_existing_run(base_url)
         state = wait_for_menu(base_url, "main")
@@ -205,7 +205,7 @@ def enter_first_combat(
     map_index: int,
 ) -> dict[str, Any]:
     state = wait_for_state_type(
-        base_url, {"event", "rewards", "map", "monster", "elite", "boss"}
+        base_url, {"event", "rewards", "map", "monster", "elite", "boss"},
     )
     if state.get("state_type") == "event":
         state = wait_for_event_options(base_url)
@@ -228,7 +228,7 @@ def enter_first_combat(
             )
             if proceed is None:
                 raise RuntimeError(
-                    "Neow did not expose a proceed option after selection"
+                    "Neow did not expose a proceed option after selection",
                 )
             post_action(base_url, {"action": "choose_event_option", "index": proceed})
             state = wait_for_state_type(base_url, {"rewards", "map"})
@@ -324,7 +324,7 @@ def main() -> None:
                 "state": state,
             },
             indent=indent,
-        )
+        ),
     )
 
 

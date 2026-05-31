@@ -166,7 +166,7 @@ class Sts2GymTests(unittest.TestCase):
 
                 self.assertFalse(mask[bane_index])
                 self.assertTrue(
-                    mask[len([card_id for card_id in hand_ids if card_id != 0])]
+                    mask[len([card_id for card_id in hand_ids if card_id != 0])],
                 )
                 return
 
@@ -222,7 +222,7 @@ class Sts2GymTests(unittest.TestCase):
                     continue
 
                 end_turn = len(
-                    [int(obs[i]) for i in HAND_ID_INDICES if int(obs[i]) != 0]
+                    [int(obs[i]) for i in HAND_ID_INDICES if int(obs[i]) != 0],
                 )
                 obs, _, _, _, _ = env.step(end_turn)
 
@@ -251,7 +251,7 @@ class Sts2GymTests(unittest.TestCase):
                     "state_type": "event",
                     "run": {"floor": 1},
                     "player": {"hp": 64, "max_hp": 80, "gold": 99},
-                }
+                },
             },
             {
                 "summary": {
@@ -259,7 +259,7 @@ class Sts2GymTests(unittest.TestCase):
                     "run": {"floor": 1},
                     "player": {"hp": 60, "max_hp": 80, "gold": 99},
                     "battle": {"enemies": [{"hp": 20, "max_hp": 20, "block": 0}]},
-                }
+                },
             },
         ]
         emulator = [
@@ -268,7 +268,7 @@ class Sts2GymTests(unittest.TestCase):
                     "state_type": "event",
                     "run": {"floor": 1},
                     "player": {"hp": 64, "max_hp": 80, "gold": 99},
-                }
+                },
             },
             {
                 "summary": {
@@ -276,7 +276,7 @@ class Sts2GymTests(unittest.TestCase):
                     "run": {"floor": 1},
                     "player": {"hp": 61, "max_hp": 80, "gold": 99},
                     "battle": {"enemies": [{"hp": 18, "max_hp": 20, "block": 0}]},
-                }
+                },
             },
         ]
 
@@ -302,7 +302,7 @@ class Sts2GymTests(unittest.TestCase):
                     "run": {"floor": 13},
                     "player": {"hp": 2, "max_hp": 80, "gold": 169},
                     "battle": {"enemies": [{"hp": 1, "max_hp": 29, "block": 0}]},
-                }
+                },
             },
             {
                 "summary": {
@@ -310,14 +310,14 @@ class Sts2GymTests(unittest.TestCase):
                     "run": {"floor": 13},
                     "player": {"hp": 0, "max_hp": 80, "gold": 169},
                     "battle": {"enemies": [{"hp": 1, "max_hp": 29, "block": 0}]},
-                }
+                },
             },
             {
                 "summary": {
                     "state_type": "game_over",
                     "run": {"floor": 13},
                     "player": {"hp": 0, "max_hp": 80, "gold": 169},
-                }
+                },
             },
         ]
         emulator = [
@@ -326,8 +326,8 @@ class Sts2GymTests(unittest.TestCase):
                     "state_type": "game_over",
                     "run": {"floor": 13},
                     "player": {"hp": 0, "max_hp": 80, "gold": 169},
-                }
-            }
+                },
+            },
         ]
         emulator = [reference[0], *emulator]
 
@@ -359,14 +359,14 @@ class Sts2GymTests(unittest.TestCase):
                         "player": {"hp": 64, "max_hp": 80, "gold": 99},
                     },
                 },
-            ]
+            ],
         }
 
         result = replay_full_run_trace.replay_trace(payload, emulator_seed=0)
 
         self.assertIsNotNone(result.unsupported_action)
         self.assertIn(
-            "step 1: unsupported action 'select_card'", result.unsupported_action
+            "step 1: unsupported action 'select_card'", result.unsupported_action,
         )
         self.assertIn("reference state_type='card_select'", result.unsupported_action)
         self.assertIn("floor=1", result.unsupported_action)
@@ -402,7 +402,7 @@ class Sts2GymTests(unittest.TestCase):
                     "action": {"action": "choose_map_node", "index": 0},
                     "summary": {"state_type": "monster", "run": {"floor": 1}},
                 },
-            ]
+            ],
         }
 
         result = replay_full_run_trace.replay_trace(payload, emulator_seed=0)
@@ -427,7 +427,7 @@ class Sts2GymTests(unittest.TestCase):
                 {"action": "claim_reward", "index": 0},
                 obs,
                 {"phase": PHASE_CARD_REWARD},
-            )
+            ),
         )
 
 

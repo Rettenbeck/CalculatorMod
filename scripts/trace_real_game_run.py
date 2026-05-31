@@ -7,7 +7,7 @@ import json
 import re
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -110,7 +110,7 @@ def simplify_named_list(items: list[Any]) -> list[dict[str, Any]]:
                     "name": item.get("name"),
                     "slot": item.get("slot"),
                     "counter": item.get("counter"),
-                }
+                },
             )
         else:
             simplified.append({"value": item})
@@ -163,7 +163,7 @@ def wait_after_map_choice(base_url: str, delay: float) -> dict[str, Any]:
     deadline = time.monotonic() + 20.0
     while time.monotonic() < deadline:
         if state.get("state_type") != "map" and is_actionable_state(
-            state, min_combat_hand=5
+            state, min_combat_hand=5,
         ):
             return state
         time.sleep(0.25)
@@ -211,7 +211,7 @@ def is_actionable_state(state: dict[str, Any], *, min_combat_hand: int = 1) -> b
     if state_type == "shop":
         shop = state.get("shop") or {}
         return bool(
-            state.get("options") or shop.get("items") or shop.get("can_proceed")
+            state.get("options") or shop.get("items") or shop.get("can_proceed"),
         )
     if state_type == "rest_site":
         rest_site = state.get("rest_site") or {}
@@ -299,13 +299,13 @@ def incoming_attack_damage(state: dict[str, Any]) -> int:
             if not isinstance(intent, dict) or intent.get("type") != "Attack":
                 continue
             total += first_int(intent.get("label")) or first_int(
-                intent.get("description")
+                intent.get("description"),
             )
     return total
 
 
 def best_lethal_attack(
-    state: dict[str, Any], playable: list[dict[str, Any]]
+    state: dict[str, Any], playable: list[dict[str, Any]],
 ) -> dict[str, Any] | None:
     enemies = [
         enemy
@@ -518,7 +518,7 @@ def choose_map_action(state: dict[str, Any], map_index: int) -> dict[str, Any]:
 
 
 def map_option_score(
-    state: dict[str, Any], option: Any, *, fallback_index: int
+    state: dict[str, Any], option: Any, *, fallback_index: int,
 ) -> tuple[int, int]:
     if not isinstance(option, dict):
         return (0, -fallback_index)
@@ -695,7 +695,7 @@ def capture_run(
         else:
             min_hand = 5 if payload["action"] == "end_turn" else 1
             state = wait_after_action_with_min_hand(
-                base_url, delay, min_combat_hand=min_hand
+                base_url, delay, min_combat_hand=min_hand,
             )
         append_snapshot(trace, step, payload, result, state)
 
@@ -724,7 +724,7 @@ def capture_run(
         "base_url": base_url,
         "seed": seed,
         "character": character,
-        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "captured_at": datetime.now(UTC).isoformat(),
         "trace": trace,
     }
 
@@ -745,7 +745,7 @@ def append_snapshot(
             "summary": compact_state(state),
             "raw_state": state,
             "note": note,
-        }
+        },
     )
 
 

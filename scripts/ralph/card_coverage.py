@@ -30,17 +30,17 @@ CARD_DEF_RE = re.compile(
     r"Cost: (?P<cost>-?\d+), BaseDamage: (?P<damage>-?\d+), "
     r"BaseBlock: (?P<block>-?\d+), UpgradeDamage: (?P<upgrade_damage>-?\d+), "
     r"UpgradeBlock: (?P<upgrade_block>-?\d+), Type: CardType\.(?P<type>\w+)"
-    r"(?P<flags>[^)]*)\)"
+    r"(?P<flags>[^)]*)\)",
 )
 CONST_RE = re.compile(r"public const int (?P<name>\w+)\s*=\s*(?P<id>-?\d+);")
 CASE_RE = re.compile(r"^\s*case (?P<ref>[A-Z][A-Z0-9]*\.\w+|-?\d+)\s*:", re.MULTILINE)
 CS_ARRAY_RE = re.compile(
     r"public static ReadOnlySpan<int> (?P<name>\w+)\s*=>\s*\[(?P<body>.*?)\];",
-    re.S,
+    re.DOTALL,
 )
 CARD_RARITY_RE = re.compile(r"^\s*(?P<id>\d+):\s*CARD_RARITY_", re.MULTILINE)
 CARD_CONSTANT_RE = re.compile(
-    r"^(?P<name>[A-Z0-9_]*CARD[A-Z0-9_]*)\s*=\s*(?P<id>\d+)\s*$", re.MULTILINE
+    r"^(?P<name>[A-Z0-9_]*CARD[A-Z0-9_]*)\s*=\s*(?P<id>\d+)\s*$", re.MULTILINE,
 )
 
 CARD_CONTEXT_KEYS = {
@@ -320,7 +320,7 @@ def build_candidates(
                 trace_count=trace_counts[card_id],
                 run_pool=card_id in run_pool_ids,
                 tags=card_tags(card),
-            )
+            ),
         )
     return sorted(candidates, key=lambda item: (-item.score, item.type, item.name))
 
@@ -340,7 +340,7 @@ def print_markdown_report(
     print(f"- Run reward/shop/deck card references: {len(run_pool_ids)}")
     print(f"- Trace-observed generated cards: {len(trace_counts)}")
     print(
-        f"- Trace/run-pool cards likely needing explicit native cases: {len(candidates)}"
+        f"- Trace/run-pool cards likely needing explicit native cases: {len(candidates)}",
     )
     print()
 
@@ -352,7 +352,7 @@ def print_markdown_report(
         print(
             f"| {candidate.score} | {candidate.id} | {candidate.name} | "
             f"{candidate.type} | {candidate.cost} | {candidate.trace_count} | "
-            f"{'yes' if candidate.run_pool else 'no'} | {', '.join(candidate.tags)} |"
+            f"{'yes' if candidate.run_pool else 'no'} | {', '.join(candidate.tags)} |",
         )
 
     print()
@@ -373,11 +373,11 @@ def print_markdown_report(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Report generated-card coverage signals for Ralph batch planning."
+        description="Report generated-card coverage signals for Ralph batch planning.",
     )
     parser.add_argument("--limit", type=int, default=25, help="maximum rows to print")
     parser.add_argument(
-        "--json", action="store_true", help="emit machine-readable JSON"
+        "--json", action="store_true", help="emit machine-readable JSON",
     )
     args = parser.parse_args()
 

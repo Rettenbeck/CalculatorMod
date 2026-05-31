@@ -15,6 +15,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import compare_traces
+
 from sts2_gym import Sts2RunEnv, native
 from sts2_gym.run_env import (
     EVENT_SKIP_ACTION,
@@ -22,17 +23,17 @@ from sts2_gym.run_env import (
     NODE_BOSS,
     NODE_ELITE,
     NODE_NORMAL,
+    PHASE_ANCIENT,
     PHASE_CARD_REWARD,
     PHASE_COMBAT,
     PHASE_COMPLETE,
     PHASE_EVENT,
     PHASE_MAP,
-    PHASE_ANCIENT,
     PHASE_RELIC_REWARD,
     PHASE_REST,
     PHASE_SHOP,
-    PHASE_TREASURE,
     PHASE_TRANSFORM_SELECT,
+    PHASE_TREASURE,
     REWARD_SKIP_ACTION,
     SHOP_SKIP_ACTION,
 )
@@ -93,7 +94,7 @@ def boundary_indices(trace: list[dict[str, Any]]) -> list[int]:
 
 
 def is_boundary_transition(
-    previous_summary: dict[str, Any] | None, current_summary: dict[str, Any]
+    previous_summary: dict[str, Any] | None, current_summary: dict[str, Any],
 ) -> bool:
     if previous_summary is None:
         return True
@@ -119,7 +120,7 @@ def compare_boundary_snapshots(
             if reference_boundary_matches_terminal_emulator(reference[index], emulator):
                 break
             diffs.append(
-                f"step {index}: emulator trace ended before reference boundary"
+                f"step {index}: emulator trace ended before reference boundary",
             )
             break
 
@@ -145,25 +146,25 @@ def compare_boundary_snapshots(
             if reference_value != emulator_value:
                 diffs.append(
                     f"step {index} field {field}: "
-                    f"reference={reference_value!r} emulator={emulator_value!r}"
+                    f"reference={reference_value!r} emulator={emulator_value!r}",
                 )
 
         if reference_summary.get("state_type") in COMBAT_STATES:
             combat_diffs = compare_combat_boundary(
-                index, reference_summary, emulator_summary
+                index, reference_summary, emulator_summary,
             )
             if combat_diffs and index > 0:
                 previous_emulator_summary = compare_traces.summary(emulator[index - 1])
                 same_combat_entry = previous_emulator_summary.get(
-                    "state_type"
+                    "state_type",
                 ) in COMBAT_STATES and compare_traces.get_path(
-                    previous_emulator_summary, "run.floor"
+                    previous_emulator_summary, "run.floor",
                 ) == compare_traces.get_path(
-                    reference_summary, "run.floor"
+                    reference_summary, "run.floor",
                 )
                 if same_combat_entry:
                     previous_combat_diffs = compare_combat_boundary(
-                        index, reference_summary, previous_emulator_summary
+                        index, reference_summary, previous_emulator_summary,
                     )
                     if not previous_combat_diffs:
                         combat_diffs = []
@@ -172,7 +173,7 @@ def compare_boundary_snapshots(
 
 
 def reference_boundary_matches_terminal_emulator(
-    reference_step: dict[str, Any], emulator: list[dict[str, Any]]
+    reference_step: dict[str, Any], emulator: list[dict[str, Any]],
 ) -> bool:
     if not emulator:
         return False
@@ -185,18 +186,18 @@ def reference_boundary_matches_terminal_emulator(
         return False
 
     return compare_traces.get_path(
-        reference_summary, "run.floor"
+        reference_summary, "run.floor",
     ) == compare_traces.get_path(
-        emulator_summary, "run.floor"
+        emulator_summary, "run.floor",
     ) and compare_traces.get_path(
-        reference_summary, "player.hp"
+        reference_summary, "player.hp",
     ) == compare_traces.get_path(
-        emulator_summary, "player.hp"
+        emulator_summary, "player.hp",
     )
 
 
 def compare_combat_boundary(
-    index: int, reference_summary: dict[str, Any], emulator_summary: dict[str, Any]
+    index: int, reference_summary: dict[str, Any], emulator_summary: dict[str, Any],
 ) -> list[str]:
     diffs: list[str] = []
     reference_enemies = (
@@ -206,18 +207,18 @@ def compare_combat_boundary(
     if len(reference_enemies) != len(emulator_enemies):
         return [
             f"step {index} enemy count: "
-            f"reference={len(reference_enemies)} emulator={len(emulator_enemies)}"
+            f"reference={len(reference_enemies)} emulator={len(emulator_enemies)}",
         ]
 
     for enemy_index, (reference_enemy, emulator_enemy) in enumerate(
-        zip(reference_enemies, emulator_enemies)
+        zip(reference_enemies, emulator_enemies),
     ):
         for field in ("hp", "max_hp", "block"):
             if reference_enemy.get(field) != emulator_enemy.get(field):
                 diffs.append(
                     f"step {index} enemy {enemy_index} {field}: "
                     f"reference={reference_enemy.get(field)!r} "
-                    f"emulator={emulator_enemy.get(field)!r}"
+                    f"emulator={emulator_enemy.get(field)!r}",
                 )
     return diffs
 
@@ -233,7 +234,7 @@ def replay_trace(
     try:
         obs, info = env.reset()
         emulator_trace = [
-            make_step(0, None, 0.0, False, False, obs, info, valid_actions(env))
+            make_step(0, None, 0.0, False, False, obs, info, valid_actions(env)),
         ]
 
         replay_steps = reference[1:]
@@ -316,13 +317,13 @@ def replay_trace(
                     obs,
                     info,
                     [] if terminated or truncated else valid_actions(env),
-                )
+                ),
             )
             if terminated or truncated:
                 break
 
         return ReplayResult(
-            {"source": "emulator", "seed": emulator_seed, "trace": emulator_trace}
+            {"source": "emulator", "seed": emulator_seed, "trace": emulator_trace},
         )
     finally:
         env.close()
@@ -487,7 +488,7 @@ def translate_action(
         return proceed_action(phase)
     if action_name == "choose_rest_site_option":
         option = str(
-            payload.get("option") or rest_site_option_from_command(payload) or ""
+            payload.get("option") or rest_site_option_from_command(payload) or "",
         ).upper()
         if option == "SMITH":
             return 1
@@ -513,7 +514,7 @@ def translate_action(
                 card_id = card_id_by_replay_id().get(camel_to_replay_id(requested))
                 if card_id is not None:
                     for index, reward_card_id in enumerate(
-                        info.get("card_rewards", ())
+                        info.get("card_rewards", ()),
                     ):
                         if int(reward_card_id) == card_id:
                             return index
@@ -553,7 +554,7 @@ def translate_action(
         return None
     if action_name == "buy_card" and phase == PHASE_SHOP:
         card_id = card_id_by_replay_id().get(
-            camel_to_replay_id(str(payload.get("name", "")))
+            camel_to_replay_id(str(payload.get("name", ""))),
         )
         if card_id is not None:
             for index, shop_card_id in enumerate(info.get("shop_cards", ())):
@@ -566,8 +567,8 @@ def translate_action(
         if phase == PHASE_RELIC_REWARD:
             return 4 + int(
                 payload.get(
-                    "slot", payload.get("index", potion_slot_from_command(payload) or 0)
-                )
+                    "slot", payload.get("index", potion_slot_from_command(payload) or 0),
+                ),
             )
         return None
     if action_name == "select_card" and phase == PHASE_TRANSFORM_SELECT:
@@ -578,12 +579,12 @@ def translate_action(
         return None
 
     raise UnsupportedTraceActionError(
-        f"unsupported action {action_name!r} while emulator phase is {phase}"
+        f"unsupported action {action_name!r} while emulator phase is {phase}",
     )
 
 
 def resolve_removed_hand_index(
-    payload: dict[str, Any], reference_step: dict[str, Any] | None
+    payload: dict[str, Any], reference_step: dict[str, Any] | None,
 ) -> int | None:
     pre_hand = pre_action_hand_names(payload)
     if not pre_hand:
@@ -656,12 +657,12 @@ def resolve_runreplays_card_index(payload: dict[str, Any], obs: np.ndarray) -> i
         raise UnsupportedTraceActionError(f"unknown RunReplays card id {replay_id!r}")
 
     raise UnsupportedTraceActionError(
-        f"RunReplays card {replay_id!r} is not in emulator hand"
+        f"RunReplays card {replay_id!r} is not in emulator hand",
     )
 
 
 def resolve_runreplays_card_index_or_none(
-    payload: dict[str, Any], obs: np.ndarray
+    payload: dict[str, Any], obs: np.ndarray,
 ) -> int | None:
     replay_id = replay_card_id(payload)
     if replay_id is None:
@@ -826,7 +827,7 @@ def summarize_env(obs: np.ndarray, info: dict[str, Any]) -> dict[str, Any]:
 
 
 def summarize_player(
-    obs: np.ndarray, info: dict[str, Any], *, in_combat: bool
+    obs: np.ndarray, info: dict[str, Any], *, in_combat: bool,
 ) -> dict[str, Any]:
     return {
         "hp": int(info["player_hp"]),
@@ -869,7 +870,7 @@ def summarize_battle(obs: np.ndarray) -> dict[str, Any]:
                 "block": int(obs[base + 2]),
                 "intent_type": int(obs[base + 3]),
                 "intent_mag": int(obs[base + 4]),
-            }
+            },
         )
     return {"enemies": enemies}
 
@@ -955,7 +956,7 @@ def main() -> None:
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
-            json.dumps(result.payload, indent=2) + "\n", encoding="utf-8"
+            json.dumps(result.payload, indent=2) + "\n", encoding="utf-8",
         )
 
     diffs = compare_boundary_snapshots(

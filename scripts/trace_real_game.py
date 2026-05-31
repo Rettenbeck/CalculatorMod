@@ -8,7 +8,6 @@ import sys
 import time
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 DEFAULT_BASE_URL = "http://localhost:15526"
@@ -30,11 +29,11 @@ def request_json(
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(
-            f"{method} {path} failed with HTTP {exc.code}: {detail}"
+            f"{method} {path} failed with HTTP {exc.code}: {detail}",
         ) from exc
     except URLError as exc:
         raise RuntimeError(
-            f"Could not reach STS2MCP at {base_url}: {exc.reason}"
+            f"Could not reach STS2MCP at {base_url}: {exc.reason}",
         ) from exc
 
 
@@ -68,7 +67,7 @@ def summarize_state(state: dict[str, Any]) -> dict[str, Any]:
                     for intent in intents
                 ],
                 "status": normalize_status(enemy.get("status") or []),
-            }
+            },
         )
 
     hand = [
@@ -143,7 +142,7 @@ def action_payload_from_index(state: dict[str, Any], action: int) -> dict[str, A
         return {"action": "select_card", "index": action}
     if state_type not in {"monster", "elite", "boss"}:
         raise ValueError(
-            f"Integer action mapping is only supported in combat, got {state_type!r}"
+            f"Integer action mapping is only supported in combat, got {state_type!r}",
         )
 
     hand = (state.get("player") or {}).get("hand") or []
@@ -171,7 +170,7 @@ def is_playable_state(state: dict[str, Any]) -> bool:
 
 
 def wait_for_state(
-    base_url: str, delay: float, wait_for_play_phase: bool = False
+    base_url: str, delay: float, wait_for_play_phase: bool = False,
 ) -> dict[str, Any]:
     if delay > 0:
         time.sleep(delay)
@@ -191,10 +190,10 @@ def main() -> None:
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--actions", type=int, nargs="*", default=[])
     parser.add_argument(
-        "--post-actions", default=None, help="JSON list of raw STS2MCP POST payloads"
+        "--post-actions", default=None, help="JSON list of raw STS2MCP POST payloads",
     )
     parser.add_argument(
-        "--delay", type=float, default=0.25, help="Seconds to wait after each POST"
+        "--delay", type=float, default=0.25, help="Seconds to wait after each POST",
     )
     parser.add_argument("--format", choices=["pretty", "compact"], default="pretty")
     args = parser.parse_args()
@@ -216,7 +215,7 @@ def main() -> None:
             "post": None,
             "summary": summarize_state(state),
             "raw_state": state,
-        }
+        },
     ]
 
     action_steps: list[int | dict[str, Any]] = [*args.actions, *raw_post_actions]
@@ -240,7 +239,7 @@ def main() -> None:
                 "post_result": post_result,
                 "summary": summarize_state(state),
                 "raw_state": state,
-            }
+            },
         )
 
     indent = None if args.format == "compact" else 2
@@ -248,7 +247,7 @@ def main() -> None:
         json.dumps(
             {"source": "sts2mcp", "base_url": args.base_url, "trace": trace},
             indent=indent,
-        )
+        ),
     )
 
 

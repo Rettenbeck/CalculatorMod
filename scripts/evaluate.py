@@ -9,10 +9,9 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from sts2_gym import Sts2CombatEnv, Sts2RunEnv
+from sts2_gym import Sts2CombatEnv, Sts2RunEnv, native
 from sts2_gym.env import ENCOUNTER_IDS
 from sts2_gym.run_env import PHASE_COMBAT, RUN_OBS_SIZE
-from sts2_gym import native
 
 HAND_ID_INDICES = range(8, 28, 2)
 STARTER_AGGRESSIVE_PRIORITY = (30, 472, 13, 358, 508, 519, 18, 433, 137)
@@ -71,7 +70,7 @@ def main() -> None:
     lengths: list[int] = []
     returns: list[float] = []
     by_encounter: dict[str, dict[str, float]] = defaultdict(
-        lambda: {"episodes": 0, "wins": 0, "length": 0.0, "return": 0.0}
+        lambda: {"episodes": 0, "wins": 0, "length": 0.0, "return": 0.0},
     )
 
     for episode in range(args.episodes):
@@ -102,7 +101,7 @@ def main() -> None:
 
             while True:
                 _, reward, terminated, truncated, info = env.step(
-                    choose_action(env, args.policy)
+                    choose_action(env, args.policy),
                 )
                 total_reward += reward
                 steps += 1
@@ -134,7 +133,7 @@ def main() -> None:
             f"  {encounter}: episodes={episodes} "
             f"win_rate={stats['wins'] / episodes:.3f} "
             f"avg_length={stats['length'] / episodes:.2f} "
-            f"avg_return={stats['return'] / episodes:.3f}"
+            f"avg_return={stats['return'] / episodes:.3f}",
         )
 
 

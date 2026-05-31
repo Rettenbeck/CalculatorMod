@@ -39,7 +39,7 @@ def load_trace(path: Path) -> list[dict[str, Any]]:
 
 
 def load_trace_from_payload(
-    payload: dict[str, Any], source: str = "<payload>"
+    payload: dict[str, Any], source: str = "<payload>",
 ) -> list[dict[str, Any]]:
     trace = payload.get("trace")
     if not isinstance(trace, list):
@@ -55,7 +55,7 @@ def summary(step: dict[str, Any]) -> dict[str, Any]:
 
 
 def compare(
-    left: list[dict[str, Any]], right: list[dict[str, Any]], fields: list[str]
+    left: list[dict[str, Any]], right: list[dict[str, Any]], fields: list[str],
 ) -> list[str]:
     diffs: list[str] = []
     for index, (left_step, right_step) in enumerate(zip(left, right)):
@@ -69,7 +69,7 @@ def compare(
                 right_value = get_path(right_summary, field)
                 if left_value != right_value:
                     diffs.append(
-                        f"step {index} field {field}: left={left_value!r} right={right_value!r}"
+                        f"step {index} field {field}: left={left_value!r} right={right_value!r}",
                     )
             continue
 
@@ -78,25 +78,25 @@ def compare(
             right_value = get_path(right_summary, field)
             if left_value != right_value:
                 diffs.append(
-                    f"step {index} field {field}: left={left_value!r} right={right_value!r}"
+                    f"step {index} field {field}: left={left_value!r} right={right_value!r}",
                 )
 
         left_enemies = left_summary.get("enemies") or []
         right_enemies = right_summary.get("enemies") or []
         if len(left_enemies) != len(right_enemies):
             diffs.append(
-                f"step {index} enemy count: left={len(left_enemies)} right={len(right_enemies)}"
+                f"step {index} enemy count: left={len(left_enemies)} right={len(right_enemies)}",
             )
             continue
         for enemy_index, (left_enemy, right_enemy) in enumerate(
-            zip(left_enemies, right_enemies)
+            zip(left_enemies, right_enemies),
         ):
             for field in ("hp", "max_hp", "block"):
                 if left_enemy.get(field) != right_enemy.get(field):
                     diffs.append(
                         "step "
                         f"{index} enemy {enemy_index} {field}: "
-                        f"left={left_enemy.get(field)!r} right={right_enemy.get(field)!r}"
+                        f"left={left_enemy.get(field)!r} right={right_enemy.get(field)!r}",
                     )
     if len(left) != len(right):
         diffs.append(f"trace length: left={len(left)} right={len(right)}")
@@ -108,7 +108,7 @@ def main() -> None:
     parser.add_argument("left", type=Path)
     parser.add_argument("right", type=Path)
     parser.add_argument(
-        "--field", action="append", default=[], help="Additional dotted summary field"
+        "--field", action="append", default=[], help="Additional dotted summary field",
     )
     parser.add_argument("--left-start", type=int, default=0)
     parser.add_argument("--right-start", type=int, default=0)

@@ -30,13 +30,13 @@ UPGRADE_BLOCK = re.compile(r"DynamicVars\.Block\.UpgradeValueBy\((\d+(?:\.\d+)?)
 # HP: plain int or AscensionHelper (take the max-ascension value = 1st arg)
 HP_PLAIN = re.compile(r"(?:Min|Max)InitialHp\s*=>\s*(\d+)\s*;")
 HP_ASCENSION = re.compile(
-    r"(?:Min|Max)InitialHp\s*=>.+?GetValueIfAscension\([^,]+,\s*(\d+),\s*\d+\s*\)"
+    r"(?:Min|Max)InitialHp\s*=>.+?GetValueIfAscension\([^,]+,\s*(\d+),\s*\d+\s*\)",
 )
 
 # Monster move intents
 SINGLE_ATTACK = re.compile(r"new SingleAttackIntent\((\d+)\)")
 MULTI_ATTACK = re.compile(
-    r"new MultiAttackIntent\((\d+),\s*(\d+)\)"
+    r"new MultiAttackIntent\((\d+),\s*(\d+)\)",
 )  # (damage, repeats)
 
 # Power type
@@ -112,7 +112,7 @@ def extract_cards() -> str:
             f'        new CardDef(Id: {def_id}, Name: "{name}", '
             f"Cost: {cost}, BaseDamage: {base_dmg}, BaseBlock: {base_block}, "
             f"UpgradeDamage: {upg_dmg}, UpgradeBlock: {upg_block}, "
-            f"Type: CardType.{card_type}, Rarity: CardRarity.{rarity}{flags_cs}),"
+            f"Type: CardType.{card_type}, Rarity: CardRarity.{rarity}{flags_cs}),",
         )
         if name not in SPECIAL_CARD_IDS:
             card_id += 1
@@ -191,7 +191,7 @@ def extract_enemies() -> str:
 
         entries.append(
             f'        new EnemyDef(Id: {enemy_id}, Name: "{name}", '
-            f"MinHp: {min_hp}, MaxHp: {max_hp}, Moves: {moves_cs}),"
+            f"MinHp: {min_hp}, MaxHp: {max_hp}, Moves: {moves_cs}),",
         )
         enemy_id += 1
 
@@ -258,7 +258,7 @@ def extract_powers() -> str:
 
         entries.append(
             f'        new PowerDef(Id: {power_id}, Name: "{name}", '
-            f'IsBuff: {str(is_buff).lower()}, StackType: "{stack}", TicksDown: {str(ticks).lower()}),'
+            f'IsBuff: {str(is_buff).lower()}, StackType: "{stack}", TicksDown: {str(ticks).lower()}),',
         )
         power_id += 1
 
