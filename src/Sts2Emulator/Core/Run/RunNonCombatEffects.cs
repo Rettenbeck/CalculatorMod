@@ -43,7 +43,9 @@ public static class RunNonCombatEffects
     public static RunFollowUp ApplyRelicPickup(RunState state, int relicId)
     {
         if (state.Relics.All(relic => relic.DefId != relicId))
+        {
             state.Relics.Add(new RelicInstance(relicId, StartingRelicCounter(relicId)));
+        }
 
         switch (relicId)
         {
@@ -55,10 +57,13 @@ public static class RunNonCombatEffects
                 break;
             case RunConstants.RelicNeowsBones:
                 for (int i = 0; i < 2; i++)
+                {
                     ApplyRelicPickup(
                         state,
                         state.Rng.UpFront.NextItem(RunConstants.NeowPositiveOptions.ToArray())
                     );
+                }
+
                 state.Deck.Add(
                     new CardInstance(RunConstants.CursePlaceholderCard, Upgraded: false)
                 );
@@ -213,7 +218,9 @@ public static class RunNonCombatEffects
         }
 
         if (TryEnterRetainedInstant5Event(state))
+        {
             return;
+        }
 
         List<int> eventPool = [];
         while (state.EventSequenceIndex < state.EventSequence.Length)
@@ -260,9 +267,15 @@ public static class RunNonCombatEffects
             state.PlayerHp >= 10
             && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard)
         )
+        {
             eventPool.Add(RunConstants.EventTheLegendsWereTrue);
+        }
+
         if (state.Gold >= 100 && state.Deck.Count >= 2)
+        {
             eventPool.Add(RunConstants.EventMorphicGrove);
+        }
+
         if (state.PlayerHp <= (int)(state.PlayerMaxHp * 0.7))
         {
             eventPool.Add(RunConstants.EventUnrestSite);
@@ -319,7 +332,9 @@ public static class RunNonCombatEffects
                 ? RunConstants.EventBrainLeech
             : 0;
         if (eventId == 0 || !IsEventAllowed(state, eventId))
+        {
             return false;
+        }
 
         state.EventId = eventId;
         CalculateEventVars(state);
@@ -364,7 +379,9 @@ public static class RunNonCombatEffects
     public static bool CanApplySelfHelpBookEnchantment(RunState state, int deckIndex)
     {
         if ((uint)deckIndex >= (uint)state.Deck.Count)
+        {
             return false;
+        }
 
         return CanApplySelfHelpBookEnchantment(
             state.Deck[deckIndex],
@@ -387,7 +404,9 @@ public static class RunNonCombatEffects
     public static bool ApplySelfHelpBookEnchantment(RunState state, int deckIndex)
     {
         if ((uint)deckIndex >= (uint)state.Deck.Count)
+        {
             return false;
+        }
 
         var card = state.Deck[deckIndex];
         switch (state.PendingSelfHelpBookEnchantType)
@@ -421,13 +440,17 @@ public static class RunNonCombatEffects
     private static void EnsureSunkenTreasuryVars(RunState state)
     {
         if (state.EventValue0 is null || state.EventValue1 is null)
+        {
             CalculateSunkenTreasuryVars(state);
+        }
     }
 
     private static void CalculateEventVars(RunState state)
     {
         if (state.EventId == RunConstants.EventSunkenTreasury)
+        {
             CalculateSunkenTreasuryVars(state);
+        }
     }
 
     private static void CalculateSunkenTreasuryVars(RunState state)
@@ -456,7 +479,10 @@ public static class RunNonCombatEffects
         for (int i = 0; i < state.Deck.Count; i++)
         {
             if (!RunConstants.IsRunCardUpgradable(state.Deck[i]))
+            {
                 continue;
+            }
+
             state.Deck[i] = state.Deck[i] with { Upgraded = true };
             return true;
         }
@@ -473,13 +499,17 @@ public static class RunNonCombatEffects
             .ToList();
         state.Rng.Niche.Shuffle(indexes);
         foreach (int index in indexes.Take(2))
+        {
             state.Deck[index] = state.Deck[index] with { Upgraded = true };
+        }
     }
 
     public static void RemoveLowestPriorityCard(RunState state)
     {
         if (state.Deck.Count == 0)
+        {
             return;
+        }
 
         foreach (int cardId in new[] { RunConstants.CursePlaceholderCard, 472, 131, 30 })
         {
@@ -496,7 +526,9 @@ public static class RunNonCombatEffects
     public static void TransformCardAt(RunState state, int deckIndex, GameRng rng)
     {
         if ((uint)deckIndex >= (uint)state.Deck.Count)
+        {
             return;
+        }
 
         int originalId = Math.Abs(state.Deck[deckIndex].DefId);
         var pool = RunRewardGenerator
@@ -504,7 +536,10 @@ public static class RunNonCombatEffects
             .Where(cardId => cardId != originalId)
             .ToArray();
         if (pool.Length == 0)
+        {
             return;
+        }
+
         state.Deck.RemoveAt(deckIndex);
         state.Deck.Add(new CardInstance(rng.NextItem(pool), Upgraded: false));
     }
@@ -516,14 +551,20 @@ public static class RunNonCombatEffects
     {
         int index = state.Deck.FindIndex(card => Math.Abs(card.DefId) == cardId);
         if (index >= 0)
+        {
             TransformCardAt(state, index, state.PlayerRng.Transformations);
+        }
     }
 
     private static void TransformAllMatching(RunState state, int cardId)
     {
         for (int i = 0; i < state.Deck.Count; i++)
+        {
             if (Math.Abs(state.Deck[i].DefId) == cardId)
+            {
                 TransformCardAt(state, i, state.PlayerRng.Transformations);
+            }
+        }
     }
 
     private static void UpgradeLastCardMatching(RunState state, int cardId)
@@ -531,7 +572,10 @@ public static class RunNonCombatEffects
         for (int i = state.Deck.Count - 1; i >= 0; i--)
         {
             if (state.Deck[i].DefId != cardId || !RunConstants.IsRunCardUpgradable(state.Deck[i]))
+            {
                 continue;
+            }
+
             state.Deck[i] = state.Deck[i] with { Upgraded = true };
             return;
         }

@@ -220,10 +220,17 @@ public static class NativeExports
     {
         var valid = CombatEngine.ValidActions(_pool[handle]!.State);
         for (int i = 0; i < maxActions; i++)
+        {
             maskBuf[i] = 0;
+        }
+
         foreach (int a in valid)
+        {
             if (a < maxActions)
+            {
                 maskBuf[a] = 1;
+            }
+        }
     }
 
     [UnmanagedCallersOnly]

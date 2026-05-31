@@ -30,7 +30,9 @@ public sealed class GameRng
     public T NextItem<T>(IReadOnlyList<T> items)
     {
         if (items.Count == 0)
+        {
             throw new ArgumentException("Cannot choose an item from an empty list.", nameof(items));
+        }
 
         return items[NextInt(items.Count)];
     }
@@ -44,7 +46,9 @@ public sealed class GameRng
             double sample = Math.Sqrt(-2.0 * Math.Log(d)) * Math.Sin(Math.PI * 2.0 * num);
             int result = (int)Math.Round(mean + stdDev * sample, MidpointRounding.AwayFromZero);
             if (min <= result && result <= max)
+            {
                 return result;
+            }
         }
     }
 
@@ -66,11 +70,16 @@ public sealed class GameRng
     public void AdvanceToCallCount(int callCount)
     {
         if (callCount < CallCount)
+        {
             throw new ArgumentOutOfRangeException(
                 nameof(callCount),
                 "Cannot rewind an RNG stream."
             );
+        }
+
         while (CallCount < callCount)
+        {
             NextDouble();
+        }
     }
 }

@@ -36,7 +36,9 @@ public static class RunNativeExports
     public static unsafe int Sts2Run_Reset(int handle, byte* seedPtr, int seedLen, int* obsBuf)
     {
         if (!TryGet(handle, out var run))
+        {
             return -1;
+        }
 
         string seed = Encoding.UTF8.GetString(new ReadOnlySpan<byte>(seedPtr, seedLen));
         run.Reset(seed);
@@ -55,7 +57,9 @@ public static class RunNativeExports
     )
     {
         if (!TryGet(handle, out var run))
+        {
             return -1;
+        }
 
         int status = run.Step(
             action,
@@ -88,7 +92,9 @@ public static class RunNativeExports
     )
     {
         if (!TryGet(handle, out var run))
+        {
             return -1;
+        }
 
         int status = run.StartCombat(
             new ReadOnlySpan<int>(deckIds, deckLen),
@@ -107,7 +113,9 @@ public static class RunNativeExports
     public static unsafe int Sts2Run_ActionMask(int handle, int* maskBuf, int maskLen)
     {
         if (!TryGet(handle, out var run))
+        {
             return -1;
+        }
 
         run.WriteActionMask(new Span<int>(maskBuf, maskLen));
         return 0;
@@ -116,7 +124,9 @@ public static class RunNativeExports
     public static unsafe int Sts2Run_GetInfo(int handle, int* infoBuf, int infoLen)
     {
         if (!TryGet(handle, out var run))
+        {
             return -1;
+        }
 
         run.WriteInfo(new Span<int>(infoBuf, infoLen));
         return 0;
@@ -125,10 +135,14 @@ public static class RunNativeExports
     public static unsafe int Sts2Run_GetStateList(int handle, int listId, int* outBuf, int outLen)
     {
         if (!TryGet(handle, out var run))
+        {
             return -1;
+        }
 
         if (outLen < 0)
+        {
             return -2;
+        }
 
         Span<int> output = new(outBuf, outLen);
         return listId switch
@@ -173,14 +187,19 @@ public static class RunNativeExports
     public static void Sts2Run_Destroy(int handle)
     {
         if ((uint)handle < _pool.Length)
+        {
             _pool[handle] = null;
+        }
     }
 
     private static int WriteCardList(IReadOnlyList<CardInstance> cards, Span<int> output)
     {
         int count = Math.Min(cards.Count, output.Length);
         for (int i = 0; i < count; i++)
+        {
             output[i] = cards[i].Upgraded ? -cards[i].DefId : cards[i].DefId;
+        }
+
         return cards.Count;
     }
 
@@ -188,7 +207,10 @@ public static class RunNativeExports
     {
         int count = Math.Min(relics.Count, output.Length);
         for (int i = 0; i < count; i++)
+        {
             output[i] = relics[i].DefId;
+        }
+
         return relics.Count;
     }
 
@@ -228,7 +250,10 @@ public static class RunNativeExports
     {
         int count = Math.Min(values.Length, output.Length);
         for (int i = 0; i < count; i++)
+        {
             output[i] = values[i] ? 1 : 0;
+        }
+
         return values.Length;
     }
 

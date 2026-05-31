@@ -19,9 +19,13 @@ public static class CombatEngine
         StepResult result;
 
         if (action == endTurnAction)
+        {
             result = EndTurn(state, rng);
+        }
         else if (action < endTurnAction)
+        {
             result = PlayCard(state, action, rng);
+        }
         else
         {
             int potionSlot = action - endTurnAction - 1;
@@ -58,25 +62,33 @@ public static class CombatEngine
         int effectiveCost = EffectiveCost(card, def, state);
         int energyToSpend = Math.Max(0, effectiveCost);
         if (def.Unplayable || energyToSpend > state.Energy || IsBlockedBySmoggy(def, state))
+        {
             return StepResult.Invalid;
+        }
 
         // Snapshot HP before effects.
         int playerHpBefore = state.PlayerHp;
         Span<int> enemyHpsBefore = stackalloc int[state.Enemies.Count];
         for (int i = 0; i < state.Enemies.Count; i++)
+        {
             enemyHpsBefore[i] = state.Enemies[i].Hp;
+        }
 
         state.Energy -= energyToSpend;
         state.Hand.RemoveAt(handIndex);
         if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Smoggy) > 0)
+        {
             state.SkillPlayedWhileSmoggy = true;
+        }
 
         // FreeAttackPower: consume one stack before the card effect runs (BeforeCardPlayed timing).
         if (def.Type == CardType.Attack)
         {
             int freeAtk = BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower);
             if (freeAtk > 0)
+            {
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, -1);
+            }
         }
 
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
@@ -87,9 +99,13 @@ public static class CombatEngine
             {
                 Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
                 if (oneTwoPunch == 1)
+                {
                     BuffSystem.Remove(state.PlayerBuffs, BuffId.OneTwoPunch);
+                }
                 else
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, -1);
+                }
             }
             QueueAttackPlayLifecycleEffects(state, card);
             BuffSystem.Remove(state.PlayerBuffs, BuffId.Vigor);
@@ -104,16 +120,22 @@ public static class CombatEngine
             {
                 int juggling = BuffSystem.Get(state.PlayerBuffs, BuffId.Juggling);
                 for (int i = 0; i < juggling; i++)
+                {
                     state.Hand.Add(new CardInstance(card.DefId, card.Upgraded));
+                }
             }
 
             int rage = BuffSystem.Get(state.PlayerBuffs, BuffId.Rage);
             if (rage > 0)
+            {
                 Effects.CardEffects.GainBlock(state, rage);
+            }
 
             int calamity = BuffSystem.Get(state.PlayerBuffs, BuffId.CalamityPower);
             if (calamity > 0)
+            {
                 Effects.CardEffects.AddRandomAttackCardsToHand(state, calamity, rng);
+            }
         }
 
         // Corruption: Skills exhaust instead of discard.
@@ -124,11 +146,17 @@ public static class CombatEngine
             // Played powers leave hand without firing exhaust hooks.
         }
         else if (ShouldExhaustAfterPlay(def, card) || corruptedSkill)
+        {
             Effects.CardEffects.ExhaustCard(state, card, rng: rng);
+        }
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
+        {
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
+        }
         else
+        {
             state.DiscardPile.Add(card with { FreeThisTurn = false });
+        }
 
         IncrementPlayedCardTypeCounters(state, def);
         ApplyAfterCardPlayedPowers(state);
@@ -150,7 +178,9 @@ public static class CombatEngine
         int playerHpBefore = state.PlayerHp;
         Span<int> enemyHpsBefore = stackalloc int[state.Enemies.Count];
         for (int i = 0; i < state.Enemies.Count; i++)
+        {
             enemyHpsBefore[i] = state.Enemies[i].Hp;
+        }
 
         // ── End of player turn ────────────────────────────────────────────────
         TickTheBomb(state);
@@ -158,11 +188,16 @@ public static class CombatEngine
         // Metallicize: gain block at end of player turn.
         int metallicize = BuffSystem.Get(state.PlayerBuffs, BuffId.Metallicize);
         if (metallicize > 0)
+        {
             Effects.CardEffects.GainBlock(state, metallicize);
+        }
         // Plating (Stone Armor): gain block at end of player turn.
         int plating = BuffSystem.Get(state.PlayerBuffs, BuffId.Plating);
         if (plating > 0)
+        {
             Effects.CardEffects.GainBlock(state, plating);
+        }
+
         Effects.RelicEffects.ApplyEndOfPlayerTurn(state);
 
         // Tick player debuffs at end of player turn (Vulnerable etc. tick down).
@@ -181,11 +216,15 @@ public static class CombatEngine
 
         int constrict = BuffSystem.Get(state.PlayerBuffs, BuffId.Constrict);
         if (constrict > 0)
+        {
             state.PlayerHp = Math.Max(0, state.PlayerHp - constrict);
+        }
 
         int disintegration = BuffSystem.Get(state.PlayerBuffs, BuffId.Disintegration);
         if (disintegration > 0)
+        {
             state.PlayerHp = Math.Max(0, state.PlayerHp - disintegration);
+        }
 
         // Move hand to discard, exhausting ethereal cards unless a retain-hand effect is active.
         int retainHand = BuffSystem.Get(state.PlayerBuffs, BuffId.RetainHand);
@@ -201,28 +240,44 @@ public static class CombatEngine
 
             // Status card end-of-turn effects
             if (def.Id == Effects.ST.Burn)
+            {
                 Effects.CardEffects.DealDamageToPlayer(state, 2);
+            }
             else if (def.Id == Effects.ST.Toxic)
+            {
                 Effects.CardEffects.DealDamageToPlayer(state, 5);
+            }
             else if (def.Id == Effects.ST.Beckon)
+            {
                 state.PlayerHp = Math.Max(0, state.PlayerHp - 6); // Beckon is unblockable
+            }
 
             if (retainHand > 0 || def.Retain)
+            {
                 nextHand.Add(card with { FreeThisTurn = false });
+            }
             else
+            {
                 state.DiscardPile.Add(card with { FreeThisTurn = false });
+            }
         }
         state.Hand.Clear();
         state.Hand.AddRange(nextHand);
 
         if (retainHand == 1)
+        {
             BuffSystem.Remove(state.PlayerBuffs, BuffId.RetainHand);
+        }
         else if (retainHand > 1)
+        {
             BuffSystem.Apply(state.PlayerBuffs, BuffId.RetainHand, -1);
+        }
 
         // Tick enemy debuffs before enemies act (Vulnerable/Weak on enemies tick down).
         foreach (var enemy in state.Enemies.ToArray())
+        {
             BuffSystem.TickEndOfTurn(enemy.Buffs);
+        }
 
         // ── Enemy turns ───────────────────────────────────────────────────────
         state.PlayerTurn = false;
@@ -235,7 +290,9 @@ public static class CombatEngine
                 enemy.Hp -= poison;
                 BuffSystem.Apply(enemy.Buffs, BuffId.Poison, -1);
                 if (enemy.Hp <= 0)
+                {
                     continue;
+                }
             }
 
             int sandpit = BuffSystem.Get(enemy.Buffs, BuffId.Sandpit);
@@ -274,13 +331,19 @@ public static class CombatEngine
 
         int colossus = BuffSystem.Get(state.PlayerBuffs, BuffId.Colossus);
         if (colossus > 0)
+        {
             BuffSystem.Apply(state.PlayerBuffs, BuffId.Colossus, -1);
+        }
 
         int noBlock = BuffSystem.Get(state.PlayerBuffs, BuffId.NoBlock);
         if (noBlock == 1)
+        {
             BuffSystem.Remove(state.PlayerBuffs, BuffId.NoBlock);
+        }
         else if (noBlock > 1)
+        {
             BuffSystem.Apply(state.PlayerBuffs, BuffId.NoBlock, -1);
+        }
 
         // FlameBarrier expires after enemies have acted.
         BuffSystem.Remove(state.PlayerBuffs, BuffId.FlameBarrier);
@@ -309,28 +372,37 @@ public static class CombatEngine
 
         int entropy = BuffSystem.Get(state.PlayerBuffs, BuffId.EntropyPower);
         for (int i = 0; i < entropy; i++)
+        {
             Effects.CardEffects.TransformRandomCardInHand(state, rng);
+        }
 
         // Barricade: block does not reset.
         if (BuffSystem.Get(state.PlayerBuffs, BuffId.Barricade) == 0)
+        {
             state.PlayerBlock = 0;
+        }
+
         ApplyBlockNextTurn(state);
 
         foreach (var enemy in state.Enemies)
         {
             if (enemy.DefId == KE.SkulkingColony)
+            {
                 BuffSystem.Apply(
                     enemy.Buffs,
                     BuffId.HardenedShell,
                     20 - BuffSystem.Get(enemy.Buffs, BuffId.HardenedShell)
                 );
+            }
         }
 
         Effects.RelicEffects.ApplyStartOfPlayerTurn(state);
 
         int prepTime = BuffSystem.Get(state.PlayerBuffs, BuffId.PrepTimePower);
         if (prepTime > 0)
+        {
             BuffSystem.Apply(state.PlayerBuffs, BuffId.Vigor, prepTime);
+        }
 
         int nextTurnEnergy = BuffSystem.Get(state.PlayerBuffs, BuffId.NextTurnEnergy);
         if (nextTurnEnergy > 0)
@@ -348,27 +420,39 @@ public static class CombatEngine
 
         int crimsonDmg = BuffSystem.Get(state.PlayerBuffs, BuffId.CrimsonMantleSelfDamage);
         if (crimsonDmg > 0)
+        {
             Effects.CardEffects.LoseHp(state, crimsonDmg);
+        }
+
         int crimsonBlock = BuffSystem.Get(state.PlayerBuffs, BuffId.CrimsonMantleBlock);
         if (crimsonBlock > 0)
+        {
             Effects.CardEffects.GainUnpoweredBlock(state, crimsonBlock);
+        }
 
         // DemonForm: gain Strength at start of player turn.
         int demonForm = BuffSystem.Get(state.PlayerBuffs, BuffId.DemonForm);
         if (demonForm > 0)
+        {
             BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, demonForm);
+        }
 
         // Aggression: add random upgraded card at start of player turn.
         int aggression = BuffSystem.Get(state.PlayerBuffs, BuffId.Aggression);
         if (aggression > 0)
+        {
             Effects.CardEffects.AddRandomUpgradedIroncladCardToHand(state, aggression, rng);
+        }
 
         int infernoSelfDamage = BuffSystem.Get(state.PlayerBuffs, BuffId.InfernoSelfDamage);
         if (infernoSelfDamage > 0)
         {
             Span<int> enemyHpsBeforeInferno = stackalloc int[state.Enemies.Count];
             for (int i = 0; i < state.Enemies.Count; i++)
+            {
                 enemyHpsBeforeInferno[i] = state.Enemies[i].Hp;
+            }
+
             Effects.CardEffects.LoseHp(state, infernoSelfDamage);
             HandleEnemyDeaths(state, enemyHpsBeforeInferno, rng);
         }
@@ -378,9 +462,13 @@ public static class CombatEngine
         if (platingNow > 0)
         {
             if (platingNow == 1)
+            {
                 BuffSystem.Remove(state.PlayerBuffs, BuffId.Plating);
+            }
             else
+            {
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Plating, -1);
+            }
         }
 
         BuffSystem.Remove(state.PlayerBuffs, BuffId.Tangled);
@@ -409,10 +497,16 @@ public static class CombatEngine
         }
         int infiniteBlades = BuffSystem.Get(state.PlayerBuffs, BuffId.InfiniteBlades);
         if (infiniteBlades > 0)
+        {
             Effects.CardEffects.AddGeneratedCardsToHand(state, 430, infiniteBlades);
+        }
+
         int noxiousFumes = BuffSystem.Get(state.PlayerBuffs, BuffId.NoxiousFumes);
         if (noxiousFumes > 0)
+        {
             Effects.CardEffects.ApplyPoisonToAllEnemies(state, noxiousFumes, rng);
+        }
+
         AutoPlayMayhemCards(state, rng);
         AutoPlayStampedeAttacks(state, rng);
 
@@ -433,7 +527,9 @@ public static class CombatEngine
     private static StepResult UsePotion(CombatState state, int slot)
     {
         if (slot < 0 || slot >= state.PotionSlots.Length || state.PotionSlots[slot] == 0)
+        {
             return StepResult.Invalid;
+        }
 
         Effects.PotionEffects.Apply(state.PotionSlots[slot], state);
         state.PotionSlots[slot] = 0;
@@ -458,7 +554,9 @@ public static class CombatEngine
         {
             totalMaxHp += state.Enemies[i].MaxHp;
             if (i < enemyHpsBefore.Length)
+            {
                 dmgDealt += Math.Max(0, enemyHpsBefore[i] - state.Enemies[i].Hp);
+            }
         }
 
         float dmgTaken = Math.Max(0, playerHpBefore - state.PlayerHp);
@@ -480,18 +578,36 @@ public static class CombatEngine
     private static int EffectiveCost(CardInstance card, CardDef def, CombatState state)
     {
         if (card.FreeThisTurn)
+        {
             return 0;
+        }
+
         if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0)
+        {
             return 0;
+        }
+
         int cost = def.Cost;
         if (def.Id == Effects.IC.BodySlam && card.Upgraded)
+        {
             cost -= 1;
+        }
+
         if (def.Id == Effects.IC.Havoc && card.Upgraded)
+        {
             cost -= 1;
+        }
+
         if (def.Id == Effects.IC.InfernalBlade && card.Upgraded)
+        {
             cost -= 1;
+        }
+
         if (def.Id == Effects.IC.Nostalgia && card.Upgraded)
+        {
             cost -= 1;
+        }
+
         if (
             def.Id
                 is Effects.CL.Automation
@@ -501,16 +617,27 @@ public static class CombatEngine
                     or Effects.CL.Stratagem
             && card.Upgraded
         )
+        {
             cost -= 1;
+        }
+
         if (def.Id == Effects.IC.Stomp)
+        {
             cost -= state.AttackCardsPlayedThisTurn;
+        }
+
         if (def.Id == Effects.ST.FranticEscape)
+        {
             cost += BuffSystem.Get(state.PlayerBuffs, BuffId.FranticEscapePlayedCount);
+        }
+
         if (def.Type == CardType.Attack)
         {
             cost += BuffSystem.Get(state.PlayerBuffs, BuffId.Tangled);
             if (BuffSystem.Get(state.PlayerBuffs, BuffId.FreeAttackPower) > 0)
+            {
                 return 0;
+            }
         }
         return cost;
     }
@@ -532,14 +659,20 @@ public static class CombatEngine
             int effectiveCost = EffectiveCost(state.Hand[i], def, state);
             int energyToSpend = Math.Max(0, effectiveCost);
             if (!def.Unplayable && energyToSpend <= state.Energy && !IsBlockedBySmoggy(def, state))
+            {
                 actions.Add(i);
+            }
         }
 
         actions.Add(state.Hand.Count); // end turn always valid
 
         for (int s = 0; s < state.PotionSlots.Length; s++)
+        {
             if (state.PotionSlots[s] != 0)
+            {
                 actions.Add(state.Hand.Count + 1 + s);
+            }
+        }
 
         return [.. actions];
     }
@@ -553,10 +686,14 @@ public static class CombatEngine
         for (int i = 0; i < state.Enemies.Count && i < enemyHpsBefore.Length; i++)
         {
             if (enemyHpsBefore[i] <= 0 || state.Enemies[i].Hp > 0)
+            {
                 continue;
+            }
 
             if (BuffSystem.Get(state.Enemies[i].Buffs, BuffId.Surprise) > 0)
+            {
                 SpawnGremlinMercReinforcements(state, rng, state.Enemies[i].StolenGold);
+            }
             else if (
                 state.Enemies[i].DefId == KE.FatGremlin
                 && state.EncounterId != Run.RunConstants.GremlinMercEncounterId
@@ -568,13 +705,17 @@ public static class CombatEngine
             }
 
             if (state.Enemies[i].DefId == KE.SlitheringStrangler)
+            {
                 BuffSystem.Remove(state.PlayerBuffs, BuffId.Constrict);
+            }
 
             foreach (var enemy in state.Enemies.Where(e => e.Hp > 0))
             {
                 int ravenous = BuffSystem.Get(enemy.Buffs, BuffId.Ravenous);
                 if (ravenous <= 0)
+                {
                     continue;
+                }
 
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, ravenous);
                 BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, 1);
@@ -609,7 +750,9 @@ public static class CombatEngine
                 .Select(item => item.index)
                 .ToList();
             if (attackIndexes.Count == 0)
+            {
                 return;
+            }
 
             int handIndex = attackIndexes[rng.Next(attackIndexes.Count)];
             AutoPlayCardFromHand(state, handIndex, rng);
@@ -645,7 +788,9 @@ public static class CombatEngine
             pileCard.DefId == card.DefId && pileCard.Upgraded == card.Upgraded
         );
         if (index >= 0)
+        {
             pile.RemoveAt(index);
+        }
     }
 
     private static void AutoPlayCardFromHand(CombatState state, int handIndex, Random rng)
@@ -655,7 +800,9 @@ public static class CombatEngine
 
         Span<int> enemyHpsBefore = stackalloc int[state.Enemies.Count];
         for (int i = 0; i < state.Enemies.Count; i++)
+        {
             enemyHpsBefore[i] = state.Enemies[i].Hp;
+        }
 
         state.Hand.RemoveAt(handIndex);
         Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
@@ -666,9 +813,13 @@ public static class CombatEngine
             {
                 Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
                 if (oneTwoPunch == 1)
+                {
                     BuffSystem.Remove(state.PlayerBuffs, BuffId.OneTwoPunch);
+                }
                 else
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.OneTwoPunch, -1);
+                }
             }
             QueueAttackPlayLifecycleEffects(state, card);
             BuffSystem.Remove(state.PlayerBuffs, BuffId.Vigor);
@@ -682,16 +833,22 @@ public static class CombatEngine
             {
                 int juggling = BuffSystem.Get(state.PlayerBuffs, BuffId.Juggling);
                 for (int i = 0; i < juggling; i++)
+                {
                     state.Hand.Add(new CardInstance(card.DefId, card.Upgraded));
+                }
             }
 
             int rage = BuffSystem.Get(state.PlayerBuffs, BuffId.Rage);
             if (rage > 0)
+            {
                 Effects.CardEffects.GainBlock(state, rage);
+            }
 
             int calamity = BuffSystem.Get(state.PlayerBuffs, BuffId.CalamityPower);
             if (calamity > 0)
+            {
                 Effects.CardEffects.AddRandomAttackCardsToHand(state, calamity, rng);
+            }
         }
 
         if (def.Type == CardType.Power)
@@ -699,11 +856,17 @@ public static class CombatEngine
             // Played powers leave hand without firing exhaust hooks.
         }
         else if (ShouldExhaustAfterPlay(def, card))
+        {
             Effects.CardEffects.ExhaustCard(state, card, rng: rng);
+        }
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
+        {
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
+        }
         else
+        {
             state.DiscardPile.Add(card with { FreeThisTurn = false });
+        }
 
         IncrementPlayedCardTypeCounters(state, def);
         ApplyAfterCardPlayedPowers(state);
@@ -713,7 +876,9 @@ public static class CombatEngine
     private static void QueueAttackPlayLifecycleEffects(CombatState state, CardInstance card)
     {
         if (card.DefId == Effects.CL.Bolas)
+        {
             state.ReturnToHandBeforeDraw.Add(card with { FreeThisTurn = false });
+        }
     }
 
     private static void ApplyAfterCardPlayedPowers(CombatState state)
@@ -731,15 +896,23 @@ public static class CombatEngine
 
         int afterimage = BuffSystem.Get(state.PlayerBuffs, BuffId.Afterimage);
         if (afterimage > 0)
+        {
             Effects.CardEffects.GainBlock(state, afterimage);
+        }
     }
 
     private static bool ShouldExhaustAfterPlay(CardDef def, CardInstance card)
     {
         if (def.Id == Effects.IC.Havoc)
+        {
             return false;
+        }
+
         if (def.Id == Effects.IC.Stampede)
+        {
             return false;
+        }
+
         if (
             def.Id
                 is Effects.CL.Mimic
@@ -749,9 +922,15 @@ public static class CombatEngine
                     or Effects.CL.ThinkingAhead
             && card.Upgraded
         )
+        {
             return false;
+        }
+
         if (def.Id == Effects.CL.Prolong && card.Upgraded)
+        {
             return false;
+        }
+
         return def.Exhaust;
     }
 
@@ -772,7 +951,9 @@ public static class CombatEngine
         {
             var living = state.Enemies.Where(e => e.Hp > 0).ToList();
             if (living.Count > 0)
+            {
                 targetIndex = state.Enemies.IndexOf(living[rng.Next(living.Count)]);
+            }
         }
 
         // Apply card effects.
@@ -790,11 +971,17 @@ public static class CombatEngine
             // Played powers leave hand without firing exhaust hooks.
         }
         else if (ShouldExhaustAfterPlay(def, card))
+        {
             Effects.CardEffects.ExhaustCard(state, card, rng: rng);
+        }
         else if (ShouldPlaceOnDrawPileAfterPlay(state, def))
+        {
             state.DrawPile.Insert(0, card with { FreeThisTurn = false });
+        }
         else
+        {
             state.DiscardPile.Add(card with { FreeThisTurn = false });
+        }
 
         IncrementPlayedCardTypeCounters(state, def);
         ApplyAfterCardPlayedPowers(state);
@@ -805,14 +992,18 @@ public static class CombatEngine
     {
         state.CardsPlayedThisCombat++;
         if (def.Type == CardType.Attack || def.Type == CardType.Skill)
+        {
             state.AttackOrSkillCardsPlayedThisTurn++;
+        }
     }
 
     private static void ApplyBlockNextTurn(CombatState state)
     {
         int blockNextTurn = BuffSystem.Get(state.PlayerBuffs, BuffId.BlockNextTurn);
         if (blockNextTurn <= 0)
+        {
             return;
+        }
 
         Effects.CardEffects.GainUnpoweredBlock(state, blockNextTurn);
         BuffSystem.Remove(state.PlayerBuffs, BuffId.BlockNextTurn);
@@ -822,7 +1013,9 @@ public static class CombatEngine
     {
         int turns = BuffSystem.Get(state.PlayerBuffs, BuffId.TheBombPower);
         if (turns <= 0)
+        {
             return;
+        }
 
         if (turns > 1)
         {
@@ -856,7 +1049,10 @@ public static class CombatEngine
             Buffs = [],
         };
         if (stunned)
+        {
             BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, 1);
+        }
+
         return enemy;
     }
 }

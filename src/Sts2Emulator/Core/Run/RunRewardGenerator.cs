@@ -365,28 +365,43 @@ public static class RunRewardGenerator
     public static void GenerateCombatRewards(RunState state)
     {
         if (HasRelic(state, RunConstants.RelicBurningBlood))
+        {
             state.PlayerHp = Math.Min(state.PlayerMaxHp, state.PlayerHp + 6);
+        }
+
         if (HasRelic(state, RunConstants.RelicBlackBlood))
+        {
             state.PlayerHp = Math.Min(state.PlayerMaxHp, state.PlayerHp + 12);
+        }
+
         if (
             HasRelic(state, RunConstants.RelicMeatOnTheBone)
             && state.PlayerHp <= state.PlayerMaxHp / 2
         )
+        {
             state.PlayerHp = Math.Min(state.PlayerMaxHp, state.PlayerHp + 12);
+        }
 
         if (TryGenerateRetainedTraceCombatRewards(state))
+        {
             return;
+        }
 
         bool hasPotionReward = CheckPotionRoll(state, state.PlayerRng.Rewards.NextDouble());
         ClearRewardScreen(state);
         state.RewardGold = GoldRewardForCurrentNode(state);
         if (hasPotionReward)
+        {
             state.RewardPotion = NextPotion(state, state.PlayerRng.Rewards);
+        }
 
         state.PendingRelicReward =
             state.CurrentNodeType is RunConstants.NodeElite or RunConstants.NodeBoss;
         if (state.PendingRelicReward)
+        {
             state.RelicReward = NextRelic(state);
+        }
+
         PopulateCardReward(state);
         state.RewardCardPending = true;
         state.Phase = RunPhase.RelicReward;
@@ -489,7 +504,10 @@ public static class RunRewardGenerator
         state.PendingRelicReward =
             state.CurrentNodeType is RunConstants.NodeElite or RunConstants.NodeBoss;
         if (state.PendingRelicReward)
+        {
             state.RelicReward = NextRelic(state);
+        }
+
         PopulateCardReward(state);
         state.RewardCardPending = true;
         state.Phase = RunPhase.RelicReward;
@@ -543,7 +561,10 @@ public static class RunRewardGenerator
             if (itemIndex == 0)
             {
                 if (state.Relics.All(relic => relic.DefId != state.RelicReward))
+                {
                     state.Relics.Add(new RelicInstance(state.RelicReward));
+                }
+
                 state.RelicReward = 0;
                 return true;
             }
@@ -601,7 +622,9 @@ public static class RunRewardGenerator
             state.RewardCards[1] = 381;
             state.RewardCards[2] = 50;
             for (int i = 0; i < state.RewardUpgraded.Length; i++)
+            {
                 state.RewardUpgraded[i] = silverCrucibleUpgrade;
+            }
         }
         else if (state.Floor == 5 && state.PlayerHp == 74 && state.Gold == 120)
         {
@@ -609,7 +632,9 @@ public static class RunRewardGenerator
             state.RewardCards[1] = 508;
             state.RewardCards[2] = 238;
             for (int i = 0; i < state.RewardUpgraded.Length; i++)
+            {
                 state.RewardUpgraded[i] = true;
+            }
         }
         else if (state.Floor == 6 && state.PlayerHp == 80 && state.Gold == 129)
         {
@@ -640,7 +665,9 @@ public static class RunRewardGenerator
             relic.DefId == RunConstants.RelicSilverCrucible && relic.Counter > 0
         );
         if (index < 0)
+        {
             return false;
+        }
 
         state.Relics[index] = state.Relics[index] with
         {
@@ -755,7 +782,10 @@ public static class RunRewardGenerator
         for (int i = 0; i < state.PotionSlots.Length; i++)
         {
             if (state.PotionSlots[i] != 0)
+            {
                 continue;
+            }
+
             state.PotionSlots[i] = potionId;
             return true;
         }
@@ -776,9 +806,15 @@ public static class RunRewardGenerator
     private static int GoldRewardForCurrentNode(RunState state)
     {
         if (state.ActiveCombat?.EncounterId == RunConstants.GremlinMercEncounterId)
+        {
             return 0;
+        }
+
         if (state.CurrentNodeType == RunConstants.NodeElite)
+        {
             return state.PlayerRng.Rewards.NextInt(26, 34);
+        }
+
         if (state.CurrentNodeType == RunConstants.NodeBoss)
         {
             state.PlayerRng.Rewards.NextInt(100, 101);
@@ -845,7 +881,9 @@ public static class RunRewardGenerator
                 .Where(cardId => !blacklist.Contains(cardId) && CardRarity(cardId) == allowedRarity)
                 .ToArray();
             if (available.Length > 0)
+            {
                 return rng.NextItem(available);
+            }
         }
 
         var fallback = pool.ToArray().Where(cardId => !blacklist.Contains(cardId)).ToArray();
@@ -887,9 +925,15 @@ public static class RunRewardGenerator
     {
         double roll = rng.NextDouble();
         if (roll <= 0.1)
+        {
             return RarityRare;
+        }
+
         if (roll <= 0.35)
+        {
             return RarityUncommon;
+        }
+
         return RarityCommon;
     }
 
@@ -910,7 +954,10 @@ public static class RunRewardGenerator
             _ => 50,
         };
         if (colorless)
+        {
             baseCost = RoundPositive(baseCost * 1.15);
+        }
+
         return RoundPositive(baseCost * NextDouble(rng, 0.95, 1.05));
     }
 

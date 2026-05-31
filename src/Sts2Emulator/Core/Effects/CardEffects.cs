@@ -20,7 +20,10 @@ public static class CardEffects
             {
                 var target = FirstEnemy(state);
                 if (target != null)
+                {
                     BuffSystem.Apply(target.Buffs, BuffId.Sandpit, 1);
+                }
+
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.FranticEscapePlayedCount, 1);
                 break;
             }
@@ -215,7 +218,9 @@ public static class CardEffects
                 {
                     DealDamageToEnemy(state, feedTarget, Dmg(def, upgraded));
                     if (feedTarget.Hp <= 0)
+                    {
                         state.PlayerMaxHp += upgraded ? 4 : 3;
+                    }
                 }
                 break;
             }
@@ -258,7 +263,9 @@ public static class CardEffects
                 {
                     var handCard = state.Hand[i];
                     if (GeneratedData.Cards.Get(handCard.DefId).Type == CardType.Attack)
+                    {
                         state.Hand[i] = new CardInstance(IC.GiantRock, upgraded);
+                    }
                 }
                 break;
             }
@@ -289,7 +296,10 @@ public static class CardEffects
             {
                 int count = state.Hand.Count;
                 foreach (var handCard in state.Hand.ToArray())
+                {
                     ExhaustCard(state, handCard, rng: rng);
+                }
+
                 state.Hand.Clear();
                 for (int i = 0; i < count; i++)
                 {
@@ -362,9 +372,14 @@ public static class CardEffects
             case IC.Armaments: // 1-cost, gain 5 block + upgrade 1 card/all cards if upgraded
                 GainBlock(state, Blk(def, upgraded));
                 if (upgraded)
+                {
                     UpgradeAllCardsInHand(state);
+                }
                 else
+                {
                     UpgradeFirstCardInHand(state);
+                }
+
                 break;
 
             case IC.Brand: // 0-cost, lose 1 HP, exhaust a card, gain 1/2 Strength
@@ -401,11 +416,14 @@ public static class CardEffects
                 ApplyEnemyDebuff(state, BuffId.Vulnerable, 1, rng);
                 var t = FirstEnemy(state);
                 if (t != null)
+                {
                     BuffSystem.Apply(
                         state.PlayerBuffs,
                         BuffId.Strength,
                         BuffSystem.Get(t.Buffs, BuffId.Vulnerable)
                     );
+                }
+
                 break;
             }
 
@@ -416,7 +434,10 @@ public static class CardEffects
             case IC.EvilEye: // 1-cost, gain block twice if a card exhausted this turn
                 GainBlock(state, Blk(def, upgraded));
                 if (state.CardsExhaustedThisTurn > 0)
+                {
                     GainBlock(state, Blk(def, upgraded));
+                }
+
                 break;
 
             case IC.ExpectAFight: // 2/1-cost, gain 1 energy per Attack in hand
@@ -435,7 +456,10 @@ public static class CardEffects
 
             case IC.ForgottenRitual: // 1-cost, gain 3/4 energy only if a card exhausted this turn
                 if (state.CardsExhaustedThisTurn > 0)
+                {
                     state.Energy += upgraded ? 4 : 3;
+                }
+
                 break;
 
             case IC.Havoc: // 1/0-cost, play top card of draw pile and exhaust it
@@ -653,7 +677,10 @@ public static class CardEffects
             {
                 int defId = _ironcladPool[rng.Next(_ironcladPool.Length)];
                 if (state.Hand.Count < MaxCardsInHand)
+                {
                     state.Hand.Add(new CardInstance(defId, false, FreeThisTurn: true));
+                }
+
                 break;
             }
 
@@ -679,7 +706,9 @@ public static class CardEffects
                         && hpBefore > 0
                         && !BuffSystem.Has(target.Buffs, BuffId.Minion)
                     )
+                    {
                         state.PlayerGold += upgraded ? 25 : 20;
+                    }
                 }
                 break;
             }
@@ -694,7 +723,10 @@ public static class CardEffects
 
             case CL.Impatience: // 0-cost, draw if no Attacks remain in hand
                 if (state.Hand.All(c => GeneratedData.Cards.Get(c.DefId).Type != CardType.Attack))
+                {
                     DrawCards(state, upgraded ? 3 : 2, rng);
+                }
+
                 break;
 
             case CL.JackOfAllTrades: // 0-cost, add 1/2 random colorless cards, exhaust
@@ -818,7 +850,10 @@ public static class CardEffects
         foreach (var item in rareIndices)
         {
             if (state.Hand.Count >= MaxCardsInHand)
+            {
                 break;
+            }
+
             state.Hand.Add(item.Card with { Retain = retain });
             state.DrawPile.RemoveAt(item.Index);
         }
@@ -839,7 +874,10 @@ public static class CardEffects
     internal static void TransformRandomCardInHand(CombatState state, Random rng)
     {
         if (state.Hand.Count == 0)
+        {
             return;
+        }
+
         int idx = rng.Next(state.Hand.Count);
         int defId = _ironcladPool[rng.Next(_ironcladPool.Length)];
         state.Hand[idx] = new CardInstance(defId, false);
@@ -861,7 +899,9 @@ public static class CardEffects
                 MoveStratagemCardsToHandAfterShuffle(state);
             }
             if (state.DrawPile.Count == 0)
+            {
                 break;
+            }
 
             var card = state.DrawPile[0];
             state.DrawPile.RemoveAt(0);
@@ -889,7 +929,9 @@ public static class CardEffects
     {
         int automation = BuffSystem.Get(state.PlayerBuffs, BuffId.AutomationPower);
         if (automation <= 0)
+        {
             return;
+        }
 
         state.DrawnCardsSinceAutomationProc++;
         if (state.DrawnCardsSinceAutomationProc >= 10)
@@ -925,19 +967,27 @@ public static class CardEffects
         state.ExhaustPile.Add(card with { FreeThisTurn = false });
         state.CardsExhaustedThisTurn++;
         if (card.DefId == IC.DrumOfBattle)
+        {
             state.Energy += card.Upgraded ? 3 : 2;
+        }
 
         int fnp = BuffSystem.Get(state.PlayerBuffs, BuffId.FeelNoPain);
         if (fnp > 0)
+        {
             state.PlayerBlock += BuffSystem.IncomingBlock(fnp, state.PlayerBuffs);
+        }
 
         int de = BuffSystem.Get(state.PlayerBuffs, BuffId.DarkEmbrace);
         if (de > 0)
         {
             if (causedByEthereal)
+            {
                 state.EtherealExhaustCount++;
+            }
             else if (rng != null)
+            {
                 DrawCards(state, de, rng);
+            }
         }
     }
 
@@ -947,7 +997,9 @@ public static class CardEffects
     {
         var target = FirstEnemy(state);
         if (target != null)
+        {
             DealDamageToEnemy(state, target, amount);
+        }
     }
 
     public static void DealDamageToPlayer(CombatState state, int amount)
@@ -965,7 +1017,9 @@ public static class CardEffects
     public static void DealDamageToAll(CombatState state, int amount)
     {
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToList())
+        {
             DealDamageToEnemy(state, enemy, amount);
+        }
     }
 
     // Deals `amount` to first living enemy, `hits` times.
@@ -975,7 +1029,10 @@ public static class CardEffects
         {
             var target = FirstEnemy(state);
             if (target is null)
+            {
                 break;
+            }
+
             DealDamageToEnemy(state, target, amount);
         }
     }
@@ -984,8 +1041,12 @@ public static class CardEffects
     public static void DealDamageToAllMultiHit(CombatState state, int amount, int hits)
     {
         for (int i = 0; i < hits; i++)
+        {
             foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToList())
+            {
                 DealDamageToEnemy(state, enemy, amount);
+            }
+        }
     }
 
     private static void DealDamageToRandomEnemiesMultiHit(
@@ -999,7 +1060,9 @@ public static class CardEffects
         {
             var livingEnemies = state.Enemies.Where(e => e.Hp > 0).ToList();
             if (livingEnemies.Count == 0)
+            {
                 return;
+            }
 
             DealDamageToEnemy(state, livingEnemies[rng.Next(livingEnemies.Count)], amount);
         }
@@ -1012,7 +1075,10 @@ public static class CardEffects
         int damage = BuffSystem.IncomingDamage(amount, state.PlayerBuffs, target.Buffs);
         int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
         if (cap > 0)
+        {
             damage = Math.Min(damage, cap);
+        }
+
         int absorbed = Math.Min(target.Block, damage);
         target.Block -= absorbed;
         int hpLoss = damage - absorbed;
@@ -1035,10 +1101,15 @@ public static class CardEffects
         {
             int envenom = BuffSystem.Get(state.PlayerBuffs, BuffId.Envenom);
             if (envenom > 0)
+            {
                 BuffSystem.Apply(target.Buffs, BuffId.Poison, envenom);
+            }
         }
         if (target.Hp == 0)
+        {
             OnEnemyDeath(state, target);
+        }
+
         return hpLoss;
     }
 
@@ -1046,7 +1117,9 @@ public static class CardEffects
     {
         // ShrinkerBeetle: permanent Shrink (ShrinkPower) is removed when its applier dies.
         if (enemy.DefId == KE.ShrinkerBeetle)
+        {
             BuffSystem.Remove(state.PlayerBuffs, BuffId.Shrink);
+        }
     }
 
     public static void GainBlock(CombatState state, int amount) =>
@@ -1066,7 +1139,9 @@ public static class CardEffects
             ? BuffSystem.IncomingBlock(amount, state.PlayerBuffs, isDefend)
             : amount;
         if (effective <= 0)
+        {
             return;
+        }
 
         int unmovable = BuffSystem.Get(state.PlayerBuffs, BuffId.UnmovablePower);
         if (unmovable > state.BlockGainsThisTurn)
@@ -1100,7 +1175,9 @@ public static class CardEffects
 
         int rupt = BuffSystem.Get(state.PlayerBuffs, BuffId.RupturePower);
         if (rupt > 0 && hpBefore > state.PlayerHp)
+        {
             BuffSystem.Apply(state.PlayerBuffs, BuffId.Strength, rupt);
+        }
 
         TriggerInfernoAfterPlayerSelfDamage(state, hpBefore - state.PlayerHp);
     }
@@ -1116,7 +1193,9 @@ public static class CardEffects
     )
     {
         if (def.Type is CardType.Status or CardType.Curse)
+        {
             return;
+        }
 
         ApplyBaseDamageAndBlock(def, upgraded, state, card);
 
@@ -1583,14 +1662,25 @@ public static class CardEffects
     {
         int dmg = (upgraded ? def.BaseDamage + def.UpgradeDamage : def.BaseDamage) + card.Sharp;
         if (def.Name == "Claw")
+        {
             dmg += BuffSystem.Get(state.PlayerBuffs, BuffId.ClawDamage);
+        }
+
         if (def.Name is "Shiv" or "HiddenDaggers")
+        {
             dmg += BuffSystem.Get(state.PlayerBuffs, BuffId.ShivDamage);
+        }
+
         int blk = (upgraded ? def.BaseBlock + def.UpgradeBlock : def.BaseBlock) + card.Nimble;
         if (dmg > 0)
+        {
             DealDamage(state, dmg);
+        }
+
         if (blk > 0)
+        {
             GainBlock(state, blk, isDefend: def.Name.Contains("Defend"));
+        }
     }
 
     private static int Dmg(CardDef def, bool upgraded) =>
@@ -1603,14 +1693,19 @@ public static class CardEffects
     {
         int idx = state.TargetEnemyIndex;
         if (idx >= 0 && idx < state.Enemies.Count && state.Enemies[idx].Hp > 0)
+        {
             return state.Enemies[idx];
+        }
+
         return state.Enemies.FirstOrDefault(e => e.Hp > 0);
     }
 
     private static void ExhaustRandomCardFromHand(CombatState state, Random rng)
     {
         if (state.Hand.Count == 0)
+        {
             return;
+        }
 
         int index = rng.Next(state.Hand.Count);
         var card = state.Hand[index];
@@ -1629,7 +1724,9 @@ public static class CardEffects
             .Where(t => GeneratedData.Cards.Get(t.card.DefId).Type == type)
             .ToList();
         if (candidates.Count == 0)
+        {
             return;
+        }
 
         var chosen = candidates[rng.Next(candidates.Count)];
         state.Hand.RemoveAt(chosen.idx);
@@ -1641,7 +1738,9 @@ public static class CardEffects
         for (int i = 0; i < state.Hand.Count; i++)
         {
             if (!IsUpgradable(state.Hand[i]))
+            {
                 continue;
+            }
 
             state.Hand[i] = state.Hand[i] with { Upgraded = true };
             return;
@@ -1653,14 +1752,18 @@ public static class CardEffects
         for (int i = 0; i < state.Hand.Count; i++)
         {
             if (IsUpgradable(state.Hand[i]))
+            {
                 state.Hand[i] = state.Hand[i] with { Upgraded = true };
+            }
         }
     }
 
     private static bool IsUpgradable(CardInstance card)
     {
         if (card.Upgraded)
+        {
             return false;
+        }
 
         var def = GeneratedData.Cards.Get(card.DefId);
         return def.Type is not (CardType.Status or CardType.Curse);
@@ -1675,11 +1778,15 @@ public static class CardEffects
             int handCountBefore = state.Hand.Count;
             DrawCards(state, 1, rng);
             if (state.Hand.Count == handCountBefore)
+            {
                 return;
+            }
 
             var drawnCard = state.Hand[^1];
             if (GeneratedData.Cards.Get(drawnCard.DefId).Type != CardType.Attack)
+            {
                 return;
+            }
         }
     }
 
@@ -1698,32 +1805,44 @@ public static class CardEffects
     {
         int inferno = BuffSystem.Get(state.PlayerBuffs, BuffId.Inferno);
         if (!state.PlayerTurn || unblockedDamage <= 0 || inferno <= 0)
+        {
             return;
+        }
 
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToList())
+        {
             DealUnpoweredDamageToEnemy(enemy, inferno);
+        }
     }
 
     private static void DealOmnislice(CombatState state, int amount)
     {
         var target = FirstEnemy(state);
         if (target is null)
+        {
             return;
+        }
 
         int splashDamage = DealDamageToEnemy(state, target, amount);
         if (splashDamage <= 0)
+        {
             return;
+        }
 
         foreach (
             var enemy in state.Enemies.Where(e => e.Hp > 0 && !ReferenceEquals(e, target)).ToList()
         )
+        {
             DealUnpoweredDamageToEnemy(state, enemy, splashDamage, triggerThorns: true);
+        }
     }
 
     private static void AddRandomInfernalBladeAttack(CombatState state, Random rng)
     {
         if (state.Hand.Count >= MaxCardsInHand)
+        {
             return;
+        }
 
         int[] options = [.. _infernalBladeAttackPool];
         for (int i = options.Length - 1; i > 0; i--)
@@ -1746,12 +1865,17 @@ public static class CardEffects
     )
     {
         if (triggerThorns && state != null)
+        {
             TriggerEnemyThorns(state, target);
+        }
 
         int damage = Math.Max(0, amount);
         int cap = BuffSystem.Get(target.Buffs, BuffId.HardToKill);
         if (cap > 0)
+        {
             damage = Math.Min(damage, cap);
+        }
+
         int absorbed = Math.Min(target.Block, damage);
         target.Block -= absorbed;
         int hpLoss = damage - absorbed;
@@ -1768,7 +1892,9 @@ public static class CardEffects
     {
         int thorns = BuffSystem.Get(target.Buffs, BuffId.Thorns);
         if (thorns <= 0)
+        {
             return;
+        }
 
         int hpBeforeThorns = state.PlayerHp;
         state.PlayerHp = Math.Max(0, state.PlayerHp - thorns);
@@ -1779,7 +1905,9 @@ public static class CardEffects
     {
         var target = FirstEnemy(state);
         if (target == null)
+        {
             return;
+        }
 
         ApplyEnemyDebuffToTarget(state, target, id, magnitude, rng);
     }
@@ -1793,7 +1921,9 @@ public static class CardEffects
     )
     {
         if (target.Hp <= 0)
+        {
             return;
+        }
 
         int before = BuffSystem.Get(target.Buffs, id);
         BuffSystem.Apply(target.Buffs, id, magnitude);
@@ -1804,9 +1934,14 @@ public static class CardEffects
     {
         var target = FirstEnemy(state);
         if (target == null)
+        {
             return;
+        }
+
         if (BuffSystem.TryConsumeArtifact(target.Buffs))
+        {
             return;
+        }
 
         BuffSystem.Apply(target.Buffs, BuffId.Strength, -amount);
         BuffSystem.Apply(target.Buffs, BuffId.TemporaryStrength, amount);
@@ -1832,7 +1967,9 @@ public static class CardEffects
     {
         int vicious = BuffSystem.Get(state.PlayerBuffs, BuffId.Vicious);
         if (id == BuffId.Vulnerable && vicious > 0 && after > before)
+        {
             DrawCards(state, vicious, rng);
+        }
     }
 
     private static readonly HashSet<string> _strikeNames = new(StringComparer.Ordinal)
@@ -1870,7 +2007,9 @@ public static class CardEffects
         for (int i = 0; i < count; i++)
         {
             if (state.Hand.Count >= MaxCardsInHand)
+            {
                 break;
+            }
 
             int defId = _ironcladPool[rng.Next(_ironcladPool.Length)];
             state.Hand.Add(new CardInstance(defId, true));
@@ -1882,7 +2021,9 @@ public static class CardEffects
         for (int i = 0; i < count; i++)
         {
             if (state.Hand.Count >= MaxCardsInHand)
+            {
                 break;
+            }
 
             int defId = _attackPool[rng.Next(_attackPool.Length)];
             state.Hand.Add(new CardInstance(defId, false));
@@ -1892,7 +2033,9 @@ public static class CardEffects
     public static void DealUnpoweredDamageToAll(CombatState state, int amount)
     {
         foreach (var enemy in state.Enemies.Where(e => e.Hp > 0).ToList())
+        {
             DealUnpoweredDamageToEnemy(state, enemy, amount, triggerThorns: false);
+        }
     }
 
     public static void ApplyPoisonToAllEnemies(CombatState state, int amount, Random rng) =>
@@ -1911,7 +2054,9 @@ public static class CardEffects
     public static void AddGeneratedCardsToHand(CombatState state, int cardId, int count)
     {
         for (int i = 0; i < count && state.Hand.Count < MaxCardsInHand; i++)
+        {
             state.Hand.Add(new CardInstance(cardId, false, FreeThisTurn: true));
+        }
     }
 
     private static int CountRendDebuffs(EnemyState enemy)
@@ -1934,7 +2079,9 @@ public static class CardEffects
                     or BuffId.Dampen
                     or BuffId.Disintegration
             )
+            {
                 count++;
+            }
         }
         return count;
     }
@@ -1944,7 +2091,9 @@ public static class CardEffects
         for (int i = 0; i < count; i++)
         {
             if (state.Hand.Count >= MaxCardsInHand)
+            {
                 break;
+            }
 
             int defId = _colorlessPool[rng.Next(_colorlessPool.Length)];
             state.Hand.Add(new CardInstance(defId, false));
@@ -1954,7 +2103,9 @@ public static class CardEffects
     private static void AddRandomClassCardToHand(CombatState state, Random rng, bool freeThisTurn)
     {
         if (state.Hand.Count >= MaxCardsInHand)
+        {
             return;
+        }
 
         int defId = _generatedClassPool[rng.Next(_generatedClassPool.Length)];
         state.Hand.Add(new CardInstance(defId, false, FreeThisTurn: freeThisTurn));
@@ -1963,11 +2114,15 @@ public static class CardEffects
     private static void DuplicateFirstCardInHand(CombatState state, int count)
     {
         if (state.Hand.Count == 0)
+        {
             return;
+        }
 
         var card = state.Hand[0];
         for (int i = 0; i < count && state.Hand.Count < MaxCardsInHand; i++)
+        {
             state.Hand.Add(card with { FreeThisTurn = true });
+        }
     }
 
     private static void ExhaustFirstCardsFromHand(CombatState state, int count, Random rng)
@@ -1983,14 +2138,20 @@ public static class CardEffects
     private static void UpgradePile(List<CardInstance> pile)
     {
         for (int i = 0; i < pile.Count; i++)
+        {
             if (IsUpgradable(pile[i]))
+            {
                 pile[i] = pile[i] with { Upgraded = true };
+            }
+        }
     }
 
     private static void MakeHandFreeThisTurn(CombatState state)
     {
         for (int i = 0; i < state.Hand.Count; i++)
+        {
             state.Hand[i] = state.Hand[i] with { FreeThisTurn = true };
+        }
     }
 
     private static void ApplyOrbLikeValue(CombatState state, string cardName, bool upgraded)
@@ -2004,7 +2165,10 @@ public static class CardEffects
             {
                 var target = FirstEnemy(state);
                 if (target != null)
+                {
                     DealUnpoweredDamageToEnemy(target, Math.Max(0, (upgraded ? 10 : 8) + focus));
+                }
+
                 break;
             }
             case "ColdSnap":
@@ -2026,13 +2190,17 @@ public static class CardEffects
     private static void MoveFirstDrawPileCardOfTypeToHand(CombatState state, CardType type)
     {
         if (state.Hand.Count >= MaxCardsInHand)
+        {
             return;
+        }
 
         int index = state.DrawPile.FindIndex(card =>
             GeneratedData.Cards.Get(card.DefId).Type == type
         );
         if (index < 0)
+        {
             return;
+        }
 
         var drawCard = state.DrawPile[index];
         state.DrawPile.RemoveAt(index);
@@ -2042,7 +2210,9 @@ public static class CardEffects
     private static void MoveFirstHandCardToTopOfDrawPile(CombatState state)
     {
         if (state.Hand.Count == 0)
+        {
             return;
+        }
 
         var handCard = state.Hand[0];
         state.Hand.RemoveAt(0);
@@ -2055,7 +2225,9 @@ public static class CardEffects
         for (int i = 0; i < stratagem && state.DrawPile.Count > 0; i++)
         {
             if (state.Hand.Count >= MaxCardsInHand)
+            {
                 return;
+            }
 
             var drawCard = state.DrawPile[0];
             state.DrawPile.RemoveAt(0);
@@ -2249,9 +2421,16 @@ public static class CardEffects
         foreach (
             var pile in new[] { state.Hand, state.DrawPile, state.DiscardPile, state.ExhaustPile }
         )
-        foreach (var c in pile)
-            if (GeneratedData.Cards.Get(c.DefId).Name.Contains("Strike"))
-                count++;
+        {
+            foreach (var c in pile)
+            {
+                if (GeneratedData.Cards.Get(c.DefId).Name.Contains("Strike"))
+                {
+                    count++;
+                }
+            }
+        }
+
         return count;
     }
 }

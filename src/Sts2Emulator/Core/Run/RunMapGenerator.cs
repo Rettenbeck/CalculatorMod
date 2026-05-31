@@ -14,9 +14,14 @@ public static class RunMapGenerator
 
         var upFront = state.Rng.UpFront;
         for (int i = 0; i < 202; i++)
+        {
             upFront.NextDouble();
+        }
+
         for (int i = 0; i < (underdocks ? 57 : 60); i++)
+        {
             upFront.NextInt((underdocks ? 57 : 60) + 1);
+        }
 
         int[] weakPool = (
             underdocks
@@ -53,7 +58,10 @@ public static class RunMapGenerator
         for (int i = 0; i < 12; i++)
         {
             if (normalBag.Count == 0)
+            {
                 normalBag = normalPool.ToList();
+            }
+
             int enc = GrabWithoutRepeatingTags(normalBag, last, upFront);
             normalSequence.Add(enc);
             last = enc;
@@ -65,7 +73,10 @@ public static class RunMapGenerator
         for (int i = 0; i < 15; i++)
         {
             if (eliteBag.Count == 0)
+            {
                 eliteBag = elitePool.ToList();
+            }
+
             int index = (int)(upFront.NextDouble() * eliteBag.Count);
             eliteSequence.Add(eliteBag[index]);
             eliteBag.RemoveAt(index);
@@ -130,26 +141,39 @@ public static class RunMapGenerator
         {
             int startCol = mapRng.NextInt(RunConstants.MapWidth);
             if (path == 1)
+            {
                 while (starts.Contains((startCol, 1)))
+                {
                     startCol = mapRng.NextInt(RunConstants.MapWidth);
+                }
+            }
+
             var current = GetOrCreate(state, startCol, 1);
             if (!starts.Contains((startCol, 1)))
+            {
                 starts.Add((startCol, 1));
+            }
+
             GeneratePath(state, mapRng, current);
         }
 
         foreach (var start in starts)
+        {
             AddEdge(state, state.CurrentMapCoord, start);
+        }
+
         foreach (
             var node in state
                 .MapNodes.Values.Where(n => n.Row == RunConstants.MapBossRow - 1)
                 .ToArray()
         )
+        {
             AddEdge(
                 state,
                 (node.Col, node.Row),
                 (RunConstants.MapStartCol, RunConstants.MapBossRow)
             );
+        }
 
         AssignPointTypes(state, mapRng, restCount, unknownCount);
         AssignEncounterIds(state);
@@ -162,7 +186,9 @@ public static class RunMapGenerator
         Array.Clear(state.MapChoices);
         Array.Clear(state.MapOptionCoords);
         if (!state.MapNodes.TryGetValue(state.CurrentMapCoord, out var current))
+        {
             return;
+        }
 
         var options = current
             .Children.OrderBy(coord => coord.Row)
@@ -201,10 +227,15 @@ public static class RunMapGenerator
             (uint)action >= RunConstants.MapChoices
             || state.MapNodeTypes[action] == RunConstants.NodeNone
         )
+        {
             return false;
+        }
+
         var coord = state.MapOptionCoords[action];
         if (coord is null)
+        {
             return false;
+        }
 
         nodeType = state.MapNodeTypes[action];
         encounterId = state.MapChoices[action];
@@ -212,9 +243,13 @@ public static class RunMapGenerator
         state.CurrentNodeType = nodeType;
         state.Floor++;
         if (nodeType == RunConstants.NodeNormal)
+        {
             state.NormalEncountersVisited++;
+        }
         else if (nodeType == RunConstants.NodeElite)
+        {
             state.EliteEncountersVisited++;
+        }
 
         Array.Clear(state.MapNodeTypes);
         Array.Clear(state.MapChoices);
@@ -245,7 +280,9 @@ public static class RunMapGenerator
         {
             int target = Math.Clamp(current.Col + delta, 0, RunConstants.MapWidth - 1);
             if (!HasInvalidCrossover(state, current, target))
+            {
                 return (target, current.Row + 1);
+            }
         }
         return (current.Col, current.Row + 1);
     }
@@ -254,7 +291,10 @@ public static class RunMapGenerator
     {
         int delta = targetCol - current.Col;
         if (delta == 0 || !state.MapNodes.TryGetValue((targetCol, current.Row), out var sibling))
+        {
             return false;
+        }
+
         return sibling.Children.Any(child => child.Col - sibling.Col == -delta);
     }
 
@@ -298,7 +338,10 @@ public static class RunMapGenerator
             foreach (var node in candidates)
             {
                 if (pointTypes.Count == 0)
+                {
                     break;
+                }
+
                 node.NodeType = GetNextValidPointType(state, pointTypes, node);
             }
         }
@@ -308,7 +351,9 @@ public static class RunMapGenerator
                 n.NodeType == RunConstants.NodeNone && n.Row > 0
             )
         )
+        {
             node.NodeType = RunConstants.NodeNormal;
+        }
     }
 
     private static int GetNextValidPointType(RunState state, Queue<int> pointTypes, RunMapNode node)
@@ -317,7 +362,10 @@ public static class RunMapGenerator
         {
             int nodeType = pointTypes.Dequeue();
             if (IsValidPointType(state, nodeType, node))
+            {
                 return nodeType;
+            }
+
             pointTypes.Enqueue(nodeType);
         }
         return RunConstants.NodeNone;
@@ -394,7 +442,9 @@ public static class RunMapGenerator
         {
             int index = Math.Min(group.Key - 1, state.NormalEncounterSequence.Length - 1);
             foreach (var node in group)
+            {
                 node.EncounterId = state.NormalEncounterSequence[Math.Max(0, index)];
+            }
         }
         foreach (
             var group in state
@@ -405,10 +455,14 @@ public static class RunMapGenerator
         {
             int index = Math.Min(group.Key, state.EliteEncounterSequence.Length - 1);
             foreach (var node in group)
+            {
                 node.EncounterId = state.EliteEncounterSequence[Math.Max(0, index)];
+            }
         }
         foreach (var node in state.MapNodes.Values.Where(n => n.NodeType == RunConstants.NodeBoss))
+        {
             node.EncounterId = state.BossEncounterId;
+        }
     }
 
     private static RunMapNode GetOrCreate(RunState state, int col, int row)
@@ -430,9 +484,14 @@ public static class RunMapGenerator
         var parent = GetOrCreate(state, parentCoord.Col, parentCoord.Row);
         var child = GetOrCreate(state, childCoord.Col, childCoord.Row);
         if (!parent.Children.Contains(childCoord))
+        {
             parent.Children.Add(childCoord);
+        }
+
         if (!child.Parents.Contains(parentCoord))
+        {
             child.Parents.Add(parentCoord);
+        }
     }
 
     private static int GrabWithoutRepeatingTags(List<int> bag, int? lastEncounter, GameRng rng)

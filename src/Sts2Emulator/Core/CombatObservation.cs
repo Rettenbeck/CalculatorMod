@@ -11,7 +11,9 @@ public static class CombatObservation
     public static void Write(CombatState s, Span<int> obs)
     {
         if (obs.Length < ObsSize)
+        {
             throw new ArgumentException("Combat observation buffer is too small.", nameof(obs));
+        }
 
         obs[..ObsSize].Clear();
         obs[0] = s.PlayerHp;
@@ -56,7 +58,9 @@ public static class CombatObservation
         {
             int baseIndex = offset + enemyIndex * enemySlotSize;
             if (enemyIndex >= s.Enemies.Count)
+            {
                 continue;
+            }
 
             var enemy = s.Enemies[enemyIndex];
             obs[baseIndex] = enemy.Hp;

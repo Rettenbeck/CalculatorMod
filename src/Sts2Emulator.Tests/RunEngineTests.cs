@@ -36,7 +36,9 @@ public class RunEngineTests
             var system = new Random(seed);
 
             for (int i = 0; i < 20; i++)
+            {
                 Assert.Equal(system.Next(int.MaxValue), dotNet.Next(int.MaxValue));
+            }
         }
     }
 
@@ -538,7 +540,10 @@ public class RunEngineTests
         shuffle.Shuffle(expectedDeck);
         var expectedShuffleRng = new CountingRandom(shuffle.RawSeed);
         for (int i = 0; i < shuffle.CallCount; i++)
+        {
             expectedShuffleRng.Next();
+        }
+
         var expectedCombat = new CombatState
         {
             NicheHpRng = new CountingRandom(new RunRngSet("0").Niche.RawSeed),
@@ -972,7 +977,10 @@ public class RunEngineTests
     {
         var expected = new int[mask.Length];
         foreach (int action in enabledActions)
+        {
             expected[action] = 1;
+        }
+
         Assert.Equal(expected, mask);
     }
 }

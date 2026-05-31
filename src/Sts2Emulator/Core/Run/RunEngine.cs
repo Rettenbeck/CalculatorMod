@@ -20,7 +20,10 @@ public sealed class RunEngine
         State.Phase = RunPhase.Ancient;
         State.Deck = [];
         foreach (int cardId in RunConstants.StarterDeckIds)
+        {
             State.Deck.Add(new CardInstance(cardId, Upgraded: false));
+        }
+
         State.Relics = [new RelicInstance(RunConstants.RelicBurningBlood)];
         Array.Clear(State.PotionSlots);
         State.CurrentNodeType = RunConstants.NodeNormal;
@@ -104,7 +107,10 @@ public sealed class RunEngine
         State.Gold = Math.Max(0, playerGold);
         Array.Clear(State.PotionSlots);
         for (int i = 0; i < Math.Min(State.PotionSlots.Length, startingPotions.Length); i++)
+        {
             State.PotionSlots[i] = startingPotions[i];
+        }
+
         State.CompletedCombatRoomsBeforeCurrent = Math.Max(0, completedCombatRoomsBeforeCurrent);
 
         var combatDeck = runDeck.ToArray();
@@ -112,13 +118,18 @@ public sealed class RunEngine
 
         var shuffleRng = new CountingRandom(State.Rng.Shuffle.RawSeed);
         for (int i = 0; i < State.Rng.Shuffle.CallCount; i++)
+        {
             shuffleRng.Next();
+        }
 
         var combat = new CombatState();
         var combatRng = new CountingRandom(State.Rng.Niche.RawSeed);
         var nicheHpRng = new CountingRandom(State.Rng.Niche.RawSeed);
         for (int i = 0; i < State.Rng.Niche.CallCount; i++)
+        {
             nicheHpRng.Next();
+        }
+
         combat.NicheHpRng = nicheHpRng;
 
         CombatFactory.Reset(
@@ -165,48 +176,82 @@ public sealed class RunEngine
         {
             case RunPhase.Combat:
                 if (State.ActiveCombat is not null)
+                {
                     foreach (int action in CombatEngine.ValidActions(State.ActiveCombat))
+                    {
                         SetMask(mask, action);
+                    }
+                }
+
                 break;
 
             case RunPhase.CardReward:
                 for (int i = 0; i <= RunConstants.RewardSkipAction; i++)
+                {
                     SetMask(mask, i);
+                }
+
                 break;
 
             case RunPhase.Map:
                 for (int i = 0; i < State.MapNodeTypes.Length; i++)
+                {
                     if (State.MapNodeTypes[i] != RunConstants.NodeNone)
+                    {
                         SetMask(mask, i);
+                    }
+                }
+
                 break;
 
             case RunPhase.Rest:
                 SetMask(mask, RunConstants.RestHealAction);
                 if (State.Deck.Any(RunConstants.IsRunCardUpgradable))
+                {
                     SetMask(mask, RunConstants.RestUpgradeAction);
+                }
+
                 SetMask(mask, RunConstants.RewardSkipAction);
                 break;
 
             case RunPhase.Shop:
                 for (int i = 0; i < State.ShopCards.Length; i++)
+                {
                     if (State.ShopCards[i] != 0 && State.Gold >= State.ShopCosts[i])
+                    {
                         SetMask(mask, i);
+                    }
+                }
+
                 for (int action = 7; action < 10; action++)
+                {
                     if (State.ShopRelics[action - 7] != 0 && State.Gold >= State.ShopCosts[action])
+                    {
                         SetMask(mask, action);
+                    }
+                }
+
                 bool hasPotionSlot = State.PotionSlots.Any(potion => potion == 0);
                 for (int action = 10; action < 13; action++)
+                {
                     if (
                         State.ShopPotions[action - 10] != 0
                         && State.Gold >= State.ShopCosts[action]
                         && hasPotionSlot
                     )
+                    {
                         SetMask(mask, action);
+                    }
+                }
+
                 if (
                     State.Gold >= State.ShopCosts[RunConstants.ShopRemoveAction]
                     && State.Deck.Count > 1
                 )
+                {
                     SetMask(mask, RunConstants.ShopRemoveAction);
+                }
+
                 SetMask(mask, RunConstants.ShopSkipAction);
                 break;
 
@@ -221,27 +266,42 @@ public sealed class RunEngine
 
             case RunPhase.Ancient:
                 for (int i = 0; i < State.NeowOptions.Length; i++)
+                {
                     if (State.NeowOptions[i] != 0)
+                    {
                         SetMask(mask, i);
+                    }
+                }
+
                 break;
 
             case RunPhase.TransformSelect:
                 if (State.PendingRestUpgrade)
                 {
                     for (int i = 0; i < State.Deck.Count; i++)
+                    {
                         if (RunConstants.IsRunCardUpgradable(State.Deck[i]))
+                        {
                             SetMask(mask, i);
+                        }
+                    }
                 }
                 else if (State.PendingSelfHelpBookEnchantType != 0)
                 {
                     for (int i = 0; i < State.Deck.Count; i++)
+                    {
                         if (RunNonCombatEffects.CanApplySelfHelpBookEnchantment(State, i))
+                        {
                             SetMask(mask, i);
+                        }
+                    }
                 }
                 else
                 {
                     for (int i = 0; i < State.Deck.Count; i++)
+                    {
                         SetMask(mask, i);
+                    }
                 }
                 break;
 
@@ -254,12 +314,16 @@ public sealed class RunEngine
     public void WriteObservation(Span<int> obs)
     {
         if (obs.Length < RunConstants.RunObsSize)
+        {
             throw new ArgumentException("Run observation buffer is too small.", nameof(obs));
+        }
 
         obs[..RunConstants.RunObsSize].Clear();
         CombatState? activeCombat = State.Phase == RunPhase.Combat ? State.ActiveCombat : null;
         if (activeCombat is not null)
+        {
             CombatObservation.Write(activeCombat, obs);
+        }
 
         int offset = RunConstants.CombatObsSize;
         int playerHp = activeCombat?.PlayerHp ?? State.PlayerHp;
@@ -306,7 +370,9 @@ public sealed class RunEngine
     public void WriteInfo(Span<int> info)
     {
         if (info.Length < RunConstants.RunInfoSize)
+        {
             throw new ArgumentException("Run info buffer is too small.", nameof(info));
+        }
 
         info[..RunConstants.RunInfoSize].Clear();
         CombatState? activeCombat = State.Phase == RunPhase.Combat ? State.ActiveCombat : null;
@@ -341,10 +407,16 @@ public sealed class RunEngine
         if (State.Phase == RunPhase.Ancient)
         {
             if (action is < 0 or >= 3 || State.NeowOptions[action] == 0)
+            {
                 return -1;
+            }
+
             ApplyAncientChoice(State.NeowOptions[action]);
             if (State.Phase == RunPhase.Ancient)
+            {
                 EnterMapPhase();
+            }
+
             return 0;
         }
 
@@ -356,7 +428,9 @@ public sealed class RunEngine
                     !RunMapGenerator.ChooseMapNode(State, action, out nodeType, out encounterId)
                     && !TryChooseInstant5RetainedUnknownPath(action, out nodeType, out encounterId)
                 )
+                {
                     return -1;
+                }
             }
 
             switch (nodeType)
@@ -417,7 +491,9 @@ public sealed class RunEngine
         if (State.Phase == RunPhase.Combat)
         {
             if (State.ActiveCombat is null || State.ActiveCombatRng is null)
+            {
                 return -1;
+            }
 
             var result =
                 targetEnemyIndex >= 0
@@ -447,7 +523,10 @@ public sealed class RunEngine
                 State.ActiveCombat.PlayerHp = 13;
                 State.ActiveCombat.PlayerGold = 126;
                 foreach (var enemy in State.ActiveCombat.Enemies)
+                {
                     enemy.Hp = 0;
+                }
+
                 result = result with { Terminal = true, PlayerWon = true };
             }
             if (
@@ -459,7 +538,10 @@ public sealed class RunEngine
                 State.ActiveCombat.PlayerHp = 50;
                 State.ActiveCombat.PlayerGold = 168;
                 foreach (var enemy in State.ActiveCombat.Enemies)
+                {
                     enemy.Hp = 0;
+                }
+
                 result = result with { Terminal = true, PlayerWon = true };
             }
             if (
@@ -477,7 +559,10 @@ public sealed class RunEngine
                     State.ActiveCombat.PlayerHp = 10;
                     State.ActiveCombat.PlayerGold = 132;
                     foreach (var enemy in State.ActiveCombat.Enemies)
+                    {
                         enemy.Hp = 0;
+                    }
+
                     result = result with { Terminal = true, PlayerWon = true };
                 }
                 else if (result.Terminal && !result.PlayerWon)
@@ -505,27 +590,42 @@ public sealed class RunEngine
         }
 
         if (State.Phase == RunPhase.CardReward)
+        {
             return StepCardReward(action, out terminal);
+        }
 
         if (State.Phase == RunPhase.RelicReward)
+        {
             return StepRelicReward(action, out terminal);
+        }
 
         if (State.Phase == RunPhase.Shop)
+        {
             return StepShop(action, out terminal);
+        }
 
         if (State.Phase == RunPhase.Rest)
+        {
             return StepRest(action, out terminal);
+        }
 
         if (State.Phase == RunPhase.Event)
+        {
             return StepEvent(action, out terminal);
+        }
 
         if (State.Phase == RunPhase.TransformSelect)
+        {
             return StepTransformSelect(action, out terminal);
+        }
 
         if (State.Phase == RunPhase.Treasure)
         {
             if (action != RunConstants.RewardSkipAction)
+            {
                 return -1;
+            }
+
             return AdvanceAfterNode(out terminal);
         }
 
@@ -552,18 +652,29 @@ public sealed class RunEngine
 
         List<int> positive = RunConstants.NeowPositiveOptions.ToArray().ToList();
         if (cursed == RunConstants.RelicCursedPearl)
+        {
             positive.Remove(RunConstants.RelicGoldenPearl);
+        }
         else if (cursed == RunConstants.RelicHeftyTablet)
+        {
             positive.Remove(RunConstants.RelicArcaneScroll);
+        }
         else if (cursed == RunConstants.RelicLeafyPoultice)
+        {
             positive.Remove(RunConstants.RelicNewLeaf);
+        }
         else if (cursed == RunConstants.RelicPrecariousShears)
+        {
             positive.Remove(RunConstants.RelicPreciseScissors);
+        }
 
         if (cursed != RunConstants.RelicLargeCapsule)
+        {
             positive.Add(
                 rng.NextBool() ? RunConstants.RelicLavaRock : RunConstants.RelicSmallCapsule
             );
+        }
+
         positive.Add(
             rng.NextBool() ? RunConstants.RelicNutritiousOyster : RunConstants.RelicStoneHumidifier
         );
@@ -619,13 +730,17 @@ public sealed class RunEngine
             _ => 0,
         };
         for (int i = 0; i < advances; i++)
+        {
             State.PlayerRng.Rewards.NextDouble();
+        }
     }
 
     private int EncounterRngSeed(int encounterId)
     {
         if (encounterId != RunConstants.SlimesWeakEncounterId)
+        {
             return 0;
+        }
 
         return unchecked(
             (int)(
@@ -639,22 +754,32 @@ public sealed class RunEngine
     private void SyncAfterCombat()
     {
         if (State.ActiveCombat is null)
+        {
             return;
+        }
 
         State.PlayerHp = Math.Max(0, State.ActiveCombat.PlayerHp);
         State.PlayerMaxHp = Math.Max(1, State.ActiveCombat.PlayerMaxHp);
         State.Gold = Math.Max(0, State.ActiveCombat.PlayerGold);
         for (int i = 0; i < State.PotionSlots.Length; i++)
+        {
             State.PotionSlots[i] = State.ActiveCombat.PotionSlots[i];
+        }
+
         if (State.ActiveCombat.ShuffleRng is not null)
+        {
             State.Rng.Shuffle.AdvanceToCallCount(State.ActiveCombat.ShuffleRng.CallCount);
+        }
+
         SyncNicheRngFromCombat();
     }
 
     private void SyncNicheRngFromCombat()
     {
         if (State.ActiveCombat?.NicheHpRng is not null)
+        {
             State.Rng.Niche.AdvanceToCallCount(State.ActiveCombat.NicheHpRng.CallCount);
+        }
     }
 
     private bool TryChooseInstant5RetainedUnknownPath(
@@ -699,11 +824,15 @@ public sealed class RunEngine
         }
 
         if (action != 1 || State.Floor != 4 || State.PlayerHp != 38 || State.Gold != 128)
+        {
             return false;
+        }
 
         var coord = (Col: 2, Row: 4);
         if (!State.MapNodes.ContainsKey(coord))
+        {
             return false;
+        }
 
         State.CurrentMapCoord = coord;
         State.CurrentNodeType = RunConstants.NodeEvent;
@@ -888,7 +1017,10 @@ public sealed class RunEngine
         {
             int cardId = State.RewardCards[action];
             if (cardId == 0)
+            {
                 return -1;
+            }
+
             State.Deck.Add(new CardInstance(cardId, State.RewardUpgraded[action]));
         }
         else if (action != RunConstants.RewardSkipAction)
@@ -925,12 +1057,17 @@ public sealed class RunEngine
     {
         terminal = false;
         if (action == RunConstants.RewardSkipAction)
+        {
             return AdvanceAfterRelicReward(out terminal);
+        }
 
         if (!RunRewardGenerator.HasPendingRewards(State))
         {
             if (action is 0 or RunConstants.RewardSkipAction)
+            {
                 return AdvanceAfterRelicReward(out terminal);
+            }
+
             return -1;
         }
 
@@ -945,7 +1082,10 @@ public sealed class RunEngine
             int cardId = State.ShopCards[action];
             int cost = State.ShopCosts[action];
             if (cardId == 0 || State.Gold < cost)
+            {
                 return -1;
+            }
+
             State.Gold -= cost;
             State.Deck.Add(new CardInstance(cardId, Upgraded: false));
             State.ShopCards[action] = 0;
@@ -956,10 +1096,16 @@ public sealed class RunEngine
             int relicId = State.ShopRelics[index];
             int cost = State.ShopCosts[action];
             if (relicId == 0 || State.Gold < cost)
+            {
                 return -1;
+            }
+
             State.Gold -= cost;
             if (State.Relics.All(relic => relic.DefId != relicId))
+            {
                 State.Relics.Add(new RelicInstance(relicId));
+            }
+
             State.ShopRelics[index] = 0;
         }
         else if (10 <= action && action < 13)
@@ -972,7 +1118,10 @@ public sealed class RunEngine
                 || State.Gold < cost
                 || !RunRewardGenerator.AddPotion(State, potionId)
             )
+            {
                 return -1;
+            }
+
             State.Gold -= cost;
             State.ShopPotions[index] = 0;
         }
@@ -980,7 +1129,10 @@ public sealed class RunEngine
         {
             int cost = State.ShopCosts[RunConstants.ShopRemoveAction];
             if (State.Gold < cost || State.Deck.Count <= 1)
+            {
                 return -1;
+            }
+
             State.Gold -= cost;
             RunNonCombatEffects.RemoveLowestPriorityCard(State);
             State.ShopRemovalsUsed++;
@@ -1035,13 +1187,19 @@ public sealed class RunEngine
         if (action == RunConstants.RestUpgradeAction)
         {
             if (!State.Deck.Any(RunConstants.IsRunCardUpgradable))
+            {
                 return -1;
+            }
+
             State.PendingRestUpgrade = true;
             State.Phase = RunPhase.TransformSelect;
             return 0;
         }
         if (action == RunConstants.RewardSkipAction)
+        {
             return AdvanceAfterNode(out terminal);
+        }
+
         return -1;
     }
 
@@ -1080,14 +1238,21 @@ public sealed class RunEngine
                 break;
             case RunConstants.EventAromaOfChaos:
                 if (action == 0)
+                {
                     RunNonCombatEffects.TransformFirstCard(State);
+                }
                 else if (action == 1)
                 {
                     if (!RunNonCombatEffects.UpgradeFirstCard(State))
+                    {
                         return -1;
+                    }
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventJungleMazeAdventure:
                 if (action == 0)
@@ -1100,7 +1265,10 @@ public sealed class RunEngine
                     State.Gold += EventGoldAmount(50);
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventMorphicGrove:
                 if (action == 0)
@@ -1114,7 +1282,10 @@ public sealed class RunEngine
                     RunNonCombatEffects.GainMaxHp(State, 5);
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventSelfHelpBook:
                 if (action is >= 0 and <= 2)
@@ -1137,7 +1308,10 @@ public sealed class RunEngine
                     return 0;
                 }
                 if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventDoorsOfLightAndDark:
                 if (action == 0)
@@ -1153,15 +1327,25 @@ public sealed class RunEngine
                     return 0;
                 }
                 if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventSunkenTreasury:
                 if (action == 0)
+                {
                     State.Gold += RunNonCombatEffects.SunkenTreasurySmallChestGold(State);
+                }
                 else if (action == 1)
+                {
                     State.Gold += RunNonCombatEffects.SunkenTreasuryLargeChestGold(State);
+                }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventBrainLeech:
                 if (action == 0)
@@ -1192,7 +1376,10 @@ public sealed class RunEngine
                     return 0;
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventByrdonisNest:
                 if (action == 0)
@@ -1203,11 +1390,16 @@ public sealed class RunEngine
                     return 0;
                 }
                 if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventTheLegendsWereTrue:
                 if (action == 0)
+                {
                     State.Deck.Add(new CardInstance(RunConstants.SpoilsMapCard, Upgraded: false));
+                }
                 else if (action == 1)
                 {
                     if (
@@ -1217,11 +1409,17 @@ public sealed class RunEngine
                             RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
                         )
                     )
+                    {
                         return -1;
+                    }
+
                     State.PlayerHp = Math.Max(0, State.PlayerHp - 8);
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventDenseVegetation:
                 if (action == 0)
@@ -1230,9 +1428,14 @@ public sealed class RunEngine
                     State.Gold += 80;
                 }
                 else if (action == 1)
+                {
                     HealPlayer(RestHealAmount());
+                }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventLuminousChoir:
                 if (action == 0)
@@ -1246,7 +1449,10 @@ public sealed class RunEngine
                 else if (action == 1)
                 {
                     if (State.Gold < 149)
+                    {
                         return -1;
+                    }
+
                     State.Gold -= 149;
                     RunNonCombatEffects.ApplyRelicPickup(
                         State,
@@ -1254,51 +1460,73 @@ public sealed class RunEngine
                     );
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventSapphireSeed:
                 if (action == 0)
                 {
                     HealPlayer(9);
                     if (!RunNonCombatEffects.UpgradeFirstCard(State))
+                    {
                         return -1;
+                    }
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventSunkenStatue:
                 if (action == 0)
+                {
                     RunNonCombatEffects.ApplyRelicPickup(
                         State,
                         RunRewardGenerator.NextRelic(State)
                     );
+                }
                 else if (action == 1)
                 {
                     State.Gold += 111;
                     State.PlayerHp = Math.Max(0, State.PlayerHp - 12);
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventTabletOfTruth:
                 if (action == 0)
+                {
                     HealPlayer(10);
+                }
                 else if (action == 1)
                 {
                     State.PlayerMaxHp = Math.Max(1, State.PlayerMaxHp - 6);
                     State.PlayerHp = Math.Min(State.PlayerHp, State.PlayerMaxHp);
                     if (!RunNonCombatEffects.UpgradeFirstCard(State))
+                    {
                         return -1;
+                    }
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventWellspring:
                 if (action == 0)
+                {
                     RunRewardGenerator.AddPotion(
                         State,
                         RunRewardGenerator.NextPotion(State, State.PlayerRng.Rewards)
                     );
+                }
                 else if (action == 1)
                 {
                     RunNonCombatEffects.RemoveLowestPriorityCard(State);
@@ -1307,13 +1535,19 @@ public sealed class RunEngine
                     );
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventWhisperingHollow:
                 if (action == 0)
                 {
                     if (State.Gold < 35)
+                    {
                         return -1;
+                    }
+
                     State.Gold -= 35;
                     RunRewardGenerator.AddPotion(
                         State,
@@ -1330,13 +1564,21 @@ public sealed class RunEngine
                     RunNonCombatEffects.TransformFirstCard(State);
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventWoodCarvings:
                 if (action is >= 0 and <= 2)
+                {
                     RunNonCombatEffects.TransformFirstCard(State);
+                }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventAbyssalBaths:
                 if (action == 0)
@@ -1345,26 +1587,40 @@ public sealed class RunEngine
                     State.PlayerHp = Math.Max(0, State.PlayerHp - 1);
                 }
                 else if (action == 1)
+                {
                     HealPlayer(10);
+                }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventDrowningBeacon:
                 if (action == 0)
                 {
                     if (State.PlayerHp <= 13)
+                    {
                         return -1;
+                    }
+
                     State.PlayerHp -= 13;
                     RunRewardGenerator.AddPotion(State, 29);
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventEndlessConveyor:
                 if (action == 0)
                 {
                     if (State.Gold < 40)
+                    {
                         return -1;
+                    }
+
                     State.Gold -= 40;
                     RunRewardGenerator.AddPotion(
                         State,
@@ -1372,11 +1628,18 @@ public sealed class RunEngine
                     );
                 }
                 else if (action == 1)
+                {
                     HealPlayer(10);
+                }
                 else if (action == 2)
+                {
                     RunNonCombatEffects.GainMaxHp(State, 4);
+                }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventPunchOff:
                 if (action == 0)
@@ -1388,15 +1651,25 @@ public sealed class RunEngine
                     );
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventSpiralingWhirlpool:
                 if (action == 0)
+                {
                     HealPlayer(RestHealAmount());
+                }
                 else if (action == 1)
+                {
                     RunNonCombatEffects.TransformFirstCard(State);
+                }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventTrashHeap:
                 if (action == 0)
@@ -1405,23 +1678,33 @@ public sealed class RunEngine
                     State.Gold += 100;
                 }
                 else if (action == 1)
+                {
                     RunNonCombatEffects.ApplyRelicPickup(
                         State,
                         RunRewardGenerator.NextRelic(State)
                     );
+                }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             case RunConstants.EventWaterloggedScriptorium:
                 if (action == 0)
                 {
                     if (State.Gold < 55)
+                    {
                         return -1;
+                    }
+
                     State.Gold -= 55;
                     RunNonCombatEffects.UpgradeFirstCard(State);
                 }
                 else if (action == 1)
+                {
                     RunNonCombatEffects.GainMaxHp(State, 6);
+                }
                 else if (action == 2)
                 {
                     State.RewardGold = 0;
@@ -1431,7 +1714,10 @@ public sealed class RunEngine
                     return 0;
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
             default:
                 if (action == 0)
@@ -1442,7 +1728,10 @@ public sealed class RunEngine
                 else if (action == 1)
                 {
                     if (State.PlayerHp >= State.PlayerMaxHp)
+                    {
                         return -1;
+                    }
+
                     State.PlayerHp = Math.Min(State.PlayerMaxHp, State.PlayerHp + 15);
                 }
                 else if (action == 2)
@@ -1457,7 +1746,10 @@ public sealed class RunEngine
                     );
                 }
                 else if (action != RunConstants.EventSkipAction)
+                {
                     return -1;
+                }
+
                 break;
         }
 
@@ -1474,7 +1766,9 @@ public sealed class RunEngine
                 (uint)action >= (uint)State.Deck.Count
                 || !RunConstants.IsRunCardUpgradable(State.Deck[action])
             )
+            {
                 return -1;
+            }
 
             State.Deck[action] = State.Deck[action] with { Upgraded = true };
             State.PendingRestUpgrade = false;
@@ -1486,7 +1780,9 @@ public sealed class RunEngine
         if (State.PendingSelfHelpBookEnchantType != 0)
         {
             if (!RunNonCombatEffects.ApplySelfHelpBookEnchantment(State, action))
+            {
                 return -1;
+            }
 
             State.PendingSelfHelpBookEnchantType = 0;
             State.EventId = RunConstants.EventResultPending;
@@ -1509,7 +1805,9 @@ public sealed class RunEngine
             else if (relicId == RunConstants.RelicEmptyCage)
             {
                 for (int i = 0; i < count; i++)
+                {
                     RunNonCombatEffects.RemoveLowestPriorityCard(State);
+                }
             }
             State.TransformSelectedDeckIndex = null;
             return AdvanceAfterNode(out terminal);
@@ -1518,7 +1816,10 @@ public sealed class RunEngine
         if (State.TransformSelectedDeckIndex is null)
         {
             if ((uint)action >= (uint)State.Deck.Count)
+            {
                 return -1;
+            }
+
             State.TransformSelectedDeckIndex = action;
             return 0;
         }
@@ -1542,10 +1843,14 @@ public sealed class RunEngine
     private int EventGoldAmount(int baseAmount)
     {
         if (baseAmount == 150 && State.Floor == 11 && State.PlayerHp == 38 && State.Gold == 201)
+        {
             return 143;
+        }
 
         if (baseAmount == 150 && State.Floor == 5 && State.PlayerHp == 20 && State.Gold == 128)
+        {
             return 135;
+        }
 
         return Math.Max(0, baseAmount + State.Rng.UpFront.NextInt(-15, 16));
     }
@@ -1553,7 +1858,9 @@ public sealed class RunEngine
     private static void SetMask(Span<int> mask, int action)
     {
         if ((uint)action < (uint)mask.Length)
+        {
             mask[action] = 1;
+        }
     }
 
     private void WriteEventActionMask(Span<int> mask)
@@ -1563,24 +1870,42 @@ public sealed class RunEngine
         {
             case RunConstants.EventUnrestSite:
                 if (State.PlayerHp < State.PlayerMaxHp)
+                {
                     SetMask(mask, 0);
+                }
+
                 if (State.PlayerMaxHp > 8)
+                {
                     SetMask(mask, 1);
+                }
+
                 break;
             case RunConstants.EventAromaOfChaos:
                 if (State.Deck.Count > 0)
+                {
                     SetMask(mask, 0);
+                }
+
                 if (State.Deck.Any(RunConstants.IsRunCardUpgradable))
+                {
                     SetMask(mask, 1);
+                }
+
                 break;
             case RunConstants.EventJungleMazeAdventure:
                 if (State.PlayerHp > 18)
+                {
                     SetMask(mask, 0);
+                }
+
                 SetMask(mask, 1);
                 break;
             case RunConstants.EventMorphicGrove:
                 if (State.Gold > 0 && State.Deck.Count >= 2)
+                {
                     SetMask(mask, 0);
+                }
+
                 SetMask(mask, 1);
                 break;
             case RunConstants.EventSelfHelpBook:
@@ -1591,18 +1916,30 @@ public sealed class RunEngine
             case RunConstants.EventBrainLeech:
                 SetMask(mask, 0);
                 if (State.PlayerHp > 5)
+                {
                     SetMask(mask, 1);
+                }
+
                 break;
             case RunConstants.EventTheLegendsWereTrue:
                 SetMask(mask, 0);
                 if (State.PlayerHp > 8 && State.PotionSlots.Any(potion => potion == 0))
+                {
                     SetMask(mask, 1);
+                }
+
                 break;
             case RunConstants.EventDoorsOfLightAndDark:
                 if (State.Deck.Any(RunConstants.IsRunCardUpgradable))
+                {
                     SetMask(mask, 0);
+                }
+
                 if (State.Deck.Count > 0)
+                {
                     SetMask(mask, 1);
+                }
+
                 break;
             case RunConstants.EventSunkenTreasury:
                 SetMask(mask, 0);
@@ -1613,7 +1950,10 @@ public sealed class RunEngine
                 break;
             default:
                 for (int i = 0; i <= RunConstants.EventSkipAction; i++)
+                {
                     SetMask(mask, i);
+                }
+
                 break;
         }
     }
@@ -1625,19 +1965,32 @@ public sealed class RunEngine
                 RunNonCombatEffects.CanApplySelfHelpBookEnchantment(card, enchantType)
             )
         )
+        {
             SetMask(mask, action);
+        }
     }
 
     private void WriteRewardActionMask(Span<int> mask)
     {
         int action = 0;
         if (State.RewardGold != 0)
+        {
             SetMask(mask, action++);
+        }
+
         if (State.RewardPotion != 0)
+        {
             SetMask(mask, action++);
+        }
+
         if (State.RelicReward != 0)
+        {
             SetMask(mask, action++);
+        }
+
         if (State.RewardCardPending)
+        {
             SetMask(mask, action);
+        }
     }
 }

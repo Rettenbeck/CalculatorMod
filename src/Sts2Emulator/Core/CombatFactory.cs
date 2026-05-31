@@ -291,7 +291,10 @@ public static class CombatFactory
         state.ReturnToHandBeforeDraw = [];
         state.PotionSlots = new int[3];
         for (int i = 0; i < Math.Min(state.PotionSlots.Length, potionIds.Length); i++)
+        {
             state.PotionSlots[i] = potionIds[i];
+        }
+
         state.Relics = relicIds.ToArray().Select(id => new RelicInstance(id)).ToList();
         state.Turn = 0;
         state.PlayerTurn = true;
@@ -326,7 +329,10 @@ public static class CombatFactory
 
         // Shuffle draw pile (skip if caller pre-shuffled it) and deal opening hand of 5.
         if (!deckPreShuffled)
+        {
             CardEffects.ShufflePile(state.DrawPile, rng);
+        }
+
         for (int i = 0; i < 5 && state.DrawPile.Count > 0; i++)
         {
             state.Hand.Add(state.DrawPile[0]);
@@ -856,7 +862,10 @@ public static class CombatFactory
             int moveIndex = count == 4 && i == 3 ? 2 : (firstMove + i) % 3;
             var scroll = CreateEnemy(KE.ScrollOfBiting, rng, ScrollIntent(moveIndex), moveIndex);
             if (i < 3)
+            {
                 BuffSystem.Apply(scroll.Buffs, BuffId.PaperCuts, 2);
+            }
+
             enemies.Add(scroll);
         }
         return enemies;
@@ -926,12 +935,17 @@ public static class CombatFactory
     {
         int hp = enemy.MaxHp;
         if (hp % 2 == 1)
+        {
             hp++;
+        }
+
         while (existing.Any(e => e.MaxHp == hp))
         {
             hp += 2;
             if (hp > 52)
+            {
                 hp = 46;
+            }
         }
         enemy.MaxHp = hp;
         enemy.Hp = hp;
@@ -1158,14 +1172,19 @@ public static class CombatFactory
         {
             hp = fixedHp.Value;
             if (_currentNicheHpRng != null)
+            {
                 _currentNicheHpRng.Next(0, def.MaxHp - def.MinHp + 1);
+            }
         }
         else if (_currentNicheHpRng != null)
         {
             // Build remaining set = [minHp..maxHp] minus already-used HP values.
             var range = Enumerable.Range(def.MinHp, def.MaxHp - def.MinHp + 1).ToHashSet();
             if (_usedNicheHps != null)
+            {
                 range.ExceptWith(_usedNicheHps);
+            }
+
             if (range.Count == 0)
             {
                 // Fallback: full range (matches game behaviour when all values are taken).

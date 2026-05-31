@@ -5,12 +5,16 @@ public static class BuffSystem
     public static void Apply(List<BuffState> buffs, BuffId id, int magnitude)
     {
         if (magnitude == 0)
+        {
             return;
+        }
 
         if (magnitude > 0 && IsDebuff(id))
         {
             if (TryConsumeArtifact(buffs))
+            {
                 return;
+            }
         }
 
         int idx = buffs.FindIndex(b => b.Id == id);
@@ -18,12 +22,18 @@ public static class BuffSystem
         {
             int newVal = buffs[idx].Magnitude + magnitude;
             if (newVal == 0)
+            {
                 buffs.RemoveAt(idx);
+            }
             else
+            {
                 buffs[idx] = buffs[idx] with { Magnitude = newVal };
+            }
         }
         else
+        {
             buffs.Add(new BuffState(id, magnitude));
+        }
     }
 
     public static int Get(List<BuffState> buffs, BuffId id)
@@ -40,13 +50,20 @@ public static class BuffSystem
     {
         int artifact = Get(buffs, BuffId.Artifact);
         if (artifact <= 0)
+        {
             return false;
+        }
 
         int artifactIdx = buffs.FindIndex(b => b.Id == BuffId.Artifact);
         if (artifact == 1)
+        {
             buffs.RemoveAt(artifactIdx);
+        }
         else
+        {
             buffs[artifactIdx] = buffs[artifactIdx] with { Magnitude = artifact - 1 };
+        }
+
         return true;
     }
 
@@ -63,10 +80,16 @@ public static class BuffSystem
                 case BuffId.Frail:
                 case BuffId.Shrink:
                     if (b.Magnitude < 0)
+                    {
                         break; // negative = permanent (e.g. ShrinkerBeetle Shrink)
+                    }
+
                     buffs[i] = b with { Magnitude = b.Magnitude - 1 };
                     if (buffs[i].Magnitude <= 0)
+                    {
                         buffs.RemoveAt(i);
+                    }
+
                     break;
             }
         }
@@ -82,9 +105,15 @@ public static class BuffSystem
         dmg += Get(attackerBuffs, BuffId.Strength);
         dmg += Get(attackerBuffs, BuffId.Vigor);
         if (Get(attackerBuffs, BuffId.Weak) > 0)
+        {
             dmg *= 0.75f;
+        }
+
         if (Get(attackerBuffs, BuffId.Shrink) != 0)
+        {
             dmg *= 0.70f; // negative = permanent
+        }
+
         if (Get(defenderBuffs, BuffId.Vulnerable) > 0)
         {
             float mult = 1.5f + Get(attackerBuffs, BuffId.CrueltyPower) / 100f;
@@ -97,12 +126,21 @@ public static class BuffSystem
     {
         float blk = baseBlock;
         if (Get(buffs, BuffId.NoBlock) > 0)
+        {
             return 0;
+        }
+
         blk += Get(buffs, BuffId.Dexterity);
         if (Get(buffs, BuffId.Frail) > 0)
+        {
             blk *= 0.75f;
+        }
+
         if (isDefend)
+        {
             blk += Get(buffs, BuffId.FastenPower);
+        }
+
         return Math.Max(0, (int)blk);
     }
 

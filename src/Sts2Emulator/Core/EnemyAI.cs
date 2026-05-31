@@ -22,7 +22,9 @@ public static class EnemyAI
     public static void UpdateSecondaryIntents(IEnumerable<EnemyState> enemies)
     {
         foreach (var enemy in enemies)
+        {
             enemy.SecondaryIntent = SecondaryIntentFor(enemy);
+        }
     }
 
     public static void ExecuteIntent(EnemyState enemy, CombatState state, Random rng)
@@ -34,7 +36,10 @@ public static class EnemyAI
         {
             BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, -1);
             if (enemy.DefId != KE.CorpseSlug)
+            {
                 enemy.MoveIndex++;
+            }
+
             RestoreTemporaryEnemyStrength(enemy);
             return;
         }
@@ -47,7 +52,10 @@ public static class EnemyAI
                 {
                     BuffSystem.Apply(enemy.Buffs, BuffId.Thorns, -2);
                     for (int i = 0; i < 3; i++)
+                    {
                         DealAttackDamage(enemy, state, 4);
+                    }
+
                     break;
                 }
 
@@ -64,9 +72,15 @@ public static class EnemyAI
                 {
                     int unblockedHits = 0;
                     if (DealAttackDamage(enemy, state, 4, triggerSuck: false))
+                    {
                         unblockedHits++;
+                    }
+
                     if (DealAttackDamage(enemy, state, 4, triggerSuck: false))
+                    {
                         unblockedHits++;
+                    }
+
                     TriggerSuck(enemy, unblockedHits);
                     break;
                 }
@@ -80,10 +94,12 @@ public static class EnemyAI
 
                 int baseDamage = enemy.CurrentIntent.Magnitude;
                 if (enemy.DefId == KE.FlailKnight)
+                {
                     baseDamage = Math.Max(
                         0,
                         baseDamage - BuffSystem.Get(enemy.Buffs, BuffId.Strength)
                     );
+                }
 
                 DealAttackDamage(enemy, state, baseDamage);
 
@@ -96,48 +112,105 @@ public static class EnemyAI
                     enemy.Hp = Math.Max(0, enemy.Hp - (fb - fbAbs));
                 }
                 if (enemy.DefId == KE.GasBomb)
+                {
                     enemy.Hp = 0;
+                }
+
                 if (enemy.DefId == KE.ThievingHopper && enemy.MoveIndex == 0)
+                {
                     StealDrawOrDiscardCard(state);
+                }
+
                 if (enemy.DefId == KE.LouseProgenitor && enemy.MoveIndex == 0)
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 2);
+                }
+
                 if (enemy.DefId == KE.Fabricator)
+                {
                     SummonFabricatorBots(enemy, state, rng, includeDefensive: false);
+                }
+
                 if (enemy.DefId == KE.ScrollOfBiting)
+                {
                     ApplyPaperCuts(enemy, state);
+                }
+
                 if (enemy.DefId == KE.TurretOperator)
+                {
                     enemy.Block += 25;
+                }
+
                 if (enemy.DefId == KE.PunchConstruct && enemy.MoveIndex % 3 == 1)
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
+                }
+
                 if (enemy.DefId == KE.DecimillipedeSegment && enemy.MoveIndex % 3 == 1)
+                {
                     BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                }
+
                 if (enemy.DefId == KE.DecimillipedeSegment && enemy.MoveIndex % 3 == 2)
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 1);
+                }
+
                 if (enemy.DefId == KE.MagiKnight && enemy.MoveIndex % 5 == 0)
+                {
                     enemy.Block += BuffSystem.IncomingBlock(9, enemy.Buffs);
+                }
+
                 if (enemy.DefId == KE.CeremonialBeast && enemy.MoveIndex > 0)
+                {
                     BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                }
+
                 if (enemy.DefId == KE.Crusher && enemy.MoveIndex % 5 == 2)
                 {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 2);
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 2);
                 }
                 if (enemy.DefId == KE.Crusher && enemy.MoveIndex % 5 == 4)
+                {
                     enemy.Block += BuffSystem.IncomingBlock(18, enemy.Buffs);
+                }
+
                 if (enemy.DefId == KE.KinPriest && enemy.MoveIndex % 4 == 0)
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
+                }
+
                 if (enemy.DefId == KE.KinPriest && enemy.MoveIndex % 4 == 1)
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 1);
+                }
+
                 if (enemy.DefId == KE.LagavulinMatriarch && enemy.MoveIndex % 4 == 3)
+                {
                     enemy.Block += BuffSystem.IncomingBlock(14, enemy.Buffs);
+                }
+
                 if (enemy.DefId == KE.SoulFysh && enemy.MoveIndex % 5 == 2)
+                {
                     AddStatus(state, ST.Beckon, 1);
+                }
+
                 if (enemy.DefId == KE.SoulFysh && enemy.MoveIndex % 5 == 4)
+                {
                     BuffSystem.Apply(state.PlayerBuffs, BuffId.Vulnerable, 3);
+                }
+
                 if (enemy.DefId == KE.Vantom && enemy.MoveIndex % 4 == 2)
+                {
                     AddStatus(state, ST.Wound, 3);
+                }
+
                 if (enemy.DefId == KE.WaterfallGiant && enemy.MoveIndex > 0)
+                {
                     BuffSystem.Apply(enemy.Buffs, BuffId.SteamEruption, 3);
+                }
+
                 break;
             }
 
@@ -164,21 +237,29 @@ public static class EnemyAI
         }
 
         if (enemy.DefId == KE.BowlbugEgg && enemy.CurrentIntent.Type == IntentType.Attack)
+        {
             enemy.Block += BuffSystem.IncomingBlock(8, enemy.Buffs);
+        }
 
         if (enemy.DefId == KE.TwoTailedRat && enemy.CurrentIntent.Type != IntentType.Buff)
+        {
             TickRatSummonCooldown(enemy);
+        }
 
         int plating = BuffSystem.Get(enemy.Buffs, BuffId.Plating);
         if (plating > 0)
         {
             enemy.Block += BuffSystem.IncomingBlock(plating, enemy.Buffs);
             if (enemy.DefId != KE.LagavulinMatriarch)
+            {
                 BuffSystem.Apply(enemy.Buffs, BuffId.Plating, -1);
+            }
         }
 
         if (enemy.DefId == KE.LagavulinMatriarch && BuffSystem.Get(enemy.Buffs, BuffId.Asleep) > 0)
+        {
             BuffSystem.Apply(enemy.Buffs, BuffId.Asleep, -1);
+        }
 
         enemy.MoveIndex++;
 
@@ -187,7 +268,9 @@ public static class EnemyAI
         {
             int ritual = BuffSystem.Get(enemy.Buffs, BuffId.Ritual);
             if (ritual > 0)
+            {
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, ritual);
+            }
         }
 
         RestoreTemporaryEnemyStrength(enemy);
@@ -197,7 +280,9 @@ public static class EnemyAI
     {
         int temporaryStrength = BuffSystem.Get(enemy.Buffs, BuffId.TemporaryStrength);
         if (temporaryStrength == 0)
+        {
             return;
+        }
 
         BuffSystem.Apply(enemy.Buffs, BuffId.Strength, temporaryStrength);
         BuffSystem.Remove(enemy.Buffs, BuffId.TemporaryStrength);
@@ -848,7 +933,9 @@ public static class EnemyAI
                 // Initialization call (MoveIndex=1, LastMove=-1): initial state is STICKY_SHOT,
                 // no RNG consumed (the state machine starts at the pre-set initial state).
                 if (enemy.MoveIndex == 1 && enemy.LastMove == -1)
+                {
                     return new Intent(IntentType.Debuff, 1);
+                }
 
                 // RandomBranchState always consumes 1 RNG call.
                 double pick = rng.NextDouble();
@@ -877,7 +964,9 @@ public static class EnemyAI
 
             case KE.TwoTailedRat:
                 if (CanRatSummon(enemy, rng))
+                {
                     return new Intent(IntentType.Buff, 0);
+                }
 
                 return (enemy.MoveIndex % 3) switch
                 {
@@ -898,7 +987,9 @@ public static class EnemyAI
             {
                 int move;
                 if (enemy.MoveIndex == 0)
+                {
                     move = 0;
+                }
                 else
                 {
                     int[] pool = enemy.LastMove switch
@@ -1040,7 +1131,10 @@ public static class EnemyAI
 
             case KE.CubexConstruct:
                 if (enemy.CurrentIntent.Magnitude > 0)
+                {
                     DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                }
+
                 BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
                 break;
 
@@ -1109,9 +1203,14 @@ public static class EnemyAI
 
             case KE.Ovicopter:
                 if (enemy.CurrentIntent.Magnitude > 0)
+                {
                     BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                }
                 else
+                {
                     SummonToughEggs(enemy, state, rng);
+                }
+
                 break;
 
             case KE.Axebot:
@@ -1152,10 +1251,17 @@ public static class EnemyAI
 
             case KE.TheObscura:
                 if (enemy.MoveIndex == 0)
+                {
                     SummonParafright(enemy, state);
+                }
                 else
+                {
                     foreach (var ally in state.Enemies.Where(e => e.Hp > 0))
+                    {
                         BuffSystem.Apply(ally.Buffs, BuffId.Strength, 3);
+                    }
+                }
+
                 break;
 
             case KE.Wriggler:
@@ -1181,7 +1287,10 @@ public static class EnemyAI
 
             case KE.InfestedPrism:
                 if (enemy.CurrentIntent.Magnitude > 0)
+                {
                     DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                }
+
                 enemy.Block += BuffSystem.IncomingBlock(22, enemy.Buffs);
                 break;
 
@@ -1217,7 +1326,10 @@ public static class EnemyAI
 
             case KE.Queen:
                 foreach (var ally in state.Enemies.Where(e => e.Hp > 0 && e.DefId != KE.Queen))
+                {
                     BuffSystem.Apply(ally.Buffs, BuffId.Strength, 1);
+                }
+
                 enemy.Block += BuffSystem.IncomingBlock(enemy.CurrentIntent.Magnitude, enemy.Buffs);
                 break;
 
@@ -1478,10 +1590,16 @@ public static class EnemyAI
         state.PlayerBlock -= absorbed;
         int unblocked = damage - absorbed;
         if (unblocked > 0)
+        {
             state.UnblockedDamageHitCount++;
+        }
+
         state.PlayerHp = Math.Max(0, state.PlayerHp - unblocked);
         if (unblocked > 0 && triggerSuck)
+        {
             TriggerSuck(enemy);
+        }
+
         ApplyPlayerThorns(enemy, state);
         return unblocked > 0;
     }
@@ -1490,14 +1608,18 @@ public static class EnemyAI
     {
         int suck = BuffSystem.Get(enemy.Buffs, BuffId.Suck);
         if (suck > 0 && hitCount > 0)
+        {
             BuffSystem.Apply(enemy.Buffs, BuffId.Strength, suck * hitCount);
+        }
     }
 
     private static void ApplyPlayerThorns(EnemyState enemy, CombatState state)
     {
         int thorns = BuffSystem.Get(state.PlayerBuffs, BuffId.Thorns);
         if (thorns <= 0)
+        {
             return;
+        }
 
         int absorbed = Math.Min(enemy.Block, thorns);
         enemy.Block -= absorbed;
@@ -1508,7 +1630,9 @@ public static class EnemyAI
     {
         int amount = Math.Min(20, state.PlayerGold);
         if (amount <= 0)
+        {
             return;
+        }
 
         state.PlayerGold -= amount;
         enemy.StolenGold += amount;
@@ -1517,16 +1641,23 @@ public static class EnemyAI
     private static void StealDrawOrDiscardCard(CombatState state)
     {
         if (state.DrawPile.Count > 0)
+        {
             state.DrawPile.RemoveAt(0);
+        }
         else if (state.DiscardPile.Count > 0)
+        {
             state.DiscardPile.RemoveAt(0);
+        }
     }
 
     private static void ApplyPaperCuts(EnemyState enemy, CombatState state)
     {
         int amount = BuffSystem.Get(enemy.Buffs, BuffId.PaperCuts);
         if (amount <= 0)
+        {
             return;
+        }
+
         state.PlayerMaxHp = Math.Max(1, state.PlayerMaxHp - amount);
         state.PlayerHp = Math.Min(state.PlayerHp, state.PlayerMaxHp);
     }
@@ -1534,7 +1665,9 @@ public static class EnemyAI
     private static void AddStatus(CombatState state, int cardId, int count)
     {
         for (int i = 0; i < count; i++)
+        {
             state.DiscardPile.Add(new CardInstance(cardId, false));
+        }
     }
 
     private static void AddStatusToDrawPileRandomly(
@@ -1545,16 +1678,20 @@ public static class EnemyAI
     )
     {
         for (int i = 0; i < count; i++)
+        {
             state.DrawPile.Insert(
                 rng.Next(state.DrawPile.Count + 1),
                 new CardInstance(cardId, false)
             );
+        }
     }
 
     private static void AddStatusToHand(CombatState state, int cardId, int count)
     {
         for (int i = 0; i < count; i++)
+        {
             state.Hand.Add(new CardInstance(cardId, false));
+        }
     }
 
     private static void SummonToughEggs(EnemyState enemy, CombatState state, Random rng)
@@ -1630,17 +1767,23 @@ public static class EnemyAI
     private static void TickRatSummonCooldown(EnemyState enemy)
     {
         if (enemy.DefId != KE.TwoTailedRat)
+        {
             return;
+        }
 
         int cooldown = BuffSystem.Get(enemy.Buffs, BuffId.SummonCooldown);
         if (cooldown > 0)
+        {
             BuffSystem.Apply(enemy.Buffs, BuffId.SummonCooldown, -1);
+        }
     }
 
     private static void SummonRatBackup(EnemyState enemy, CombatState state, Random rng)
     {
         if (state.Enemies.Count(e => e.DefId == KE.TwoTailedRat) >= 6)
+        {
             return;
+        }
 
         state.Enemies.Add(
             CreateEnemy(KE.TwoTailedRat, rng, new Intent(IntentType.Unknown, 0), stunned: true)
@@ -1677,9 +1820,15 @@ public static class EnemyAI
             Buffs = [],
         };
         if (stunned)
+        {
             BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, 1);
+        }
+
         if (defId == KE.TwoTailedRat)
+        {
             BuffSystem.Apply(enemy.Buffs, BuffId.SummonCooldown, 2);
+        }
+
         return enemy;
     }
 }

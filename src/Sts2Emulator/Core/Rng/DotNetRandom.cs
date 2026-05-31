@@ -25,14 +25,18 @@ public sealed class DotNetRandom
     public int Next(int minValue, int maxValue)
     {
         if (minValue > maxValue)
+        {
             throw new ArgumentOutOfRangeException(
                 nameof(minValue),
                 "minValue cannot be greater than maxValue."
             );
+        }
 
         long range = (long)maxValue - minValue;
         if (range <= int.MaxValue)
+        {
             return (int)(Sample() * (1.0 / Mbig) * range) + minValue;
+        }
 
         return (int)((long)(NextDouble() * range) + minValue);
     }
@@ -47,17 +51,26 @@ public sealed class DotNetRandom
 
         int inext = _inext + 1;
         if (inext >= 56)
+        {
             inext = 1;
+        }
 
         int inextp = _inextp + 1;
         if (inextp >= 56)
+        {
             inextp = 1;
+        }
 
         int retVal = _seedArray[inext] - _seedArray[inextp];
         if (retVal == Mbig)
+        {
             retVal--;
+        }
+
         if (retVal < 0)
+        {
             retVal += Mbig;
+        }
 
         _seedArray[inext] = retVal;
         _inext = inext;
@@ -77,12 +90,17 @@ public sealed class DotNetRandom
         {
             ii += 21;
             if (ii >= 55)
+            {
                 ii -= 55;
+            }
 
             _seedArray[ii] = mk;
             mk = mj - mk;
             if (mk < 0)
+            {
                 mk += Mbig;
+            }
+
             mj = _seedArray[ii];
         }
 
@@ -92,13 +110,17 @@ public sealed class DotNetRandom
             {
                 int n = i + 30;
                 if (n >= 55)
+                {
                     n -= 55;
+                }
                 unchecked
                 {
                     _seedArray[i] -= _seedArray[1 + n];
                 }
                 if (_seedArray[i] < 0)
+                {
                     _seedArray[i] += Mbig;
+                }
             }
         }
     }

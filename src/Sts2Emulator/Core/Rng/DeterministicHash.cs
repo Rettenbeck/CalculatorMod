@@ -13,7 +13,10 @@ public static class DeterministicHash
             {
                 hash1 = ((hash1 << 5) + hash1) ^ value[i];
                 if (i == value.Length - 1)
+                {
                     break;
+                }
+
                 hash2 = ((hash2 << 5) + hash2) ^ value[i + 1];
             }
 
