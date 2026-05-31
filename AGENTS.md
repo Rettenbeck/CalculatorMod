@@ -2,7 +2,7 @@
 
 - Read the README.md to get an overview for what this project is.
 - Whenever you edit a Markdown file, format it afterward with: `bunx --bun prettier --write foo.md`
-- Whenever you edit a Python file, format it afterward with: `black --target-version py314 foo.py`
+- Whenever you edit a Python file, format it afterward with: `uv run black --target-version py314 foo.py`
 - To validate code changes, run the combined lint/test script: `bash lint-and-test.sh`
 - For `Sts2RunEnv` run-level reward logic, prefer decompiled source under `decompiled\` (for example `PotionRewardOdds`, `PotionFactory`, and merchant entry classes) over inferred deterministic shortcuts.
 - Native card effects that cause player HP loss should use `CardEffects.LoseHp` so Rupture and Inferno hooks stay consistent with other card-effect self-damage.
