@@ -43,5 +43,8 @@ public readonly record struct CardInstance(
     int DefId,
     bool Upgraded,
     bool FreeThisTurn = false,
-    bool Retain = false
+    bool Retain = false,
+    int Sharp = 0,
+    int Nimble = 0,
+    int Swift = 0
 );

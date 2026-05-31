@@ -97,7 +97,7 @@ public static class RunMapGenerator
                 0, // Dense Vegetation
                 RunConstants.EventJungleMazeAdventure,
                 0, // Luminous Choir
-                RunConstants.EventMorphicGrove,
+                RunConstants.EventSelfHelpBook,
                 0, // Sapphire Seed
                 0, // Sunken Statue
                 0, // Tablet of Truth

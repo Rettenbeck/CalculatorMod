@@ -240,6 +240,44 @@ public static class CombatFactory
         int completedCombatRoomsBeforeCurrent = -1
     )
     {
+        var deck = deckIds.ToArray().Select(id => new CardInstance(Math.Abs(id), id < 0)).ToArray();
+        Reset(
+            state,
+            rng,
+            deck,
+            encounterId,
+            relicIds,
+            playerHp,
+            playerMaxHp,
+            potionIds,
+            playerGold,
+            deckPreShuffled,
+            shuffleRng,
+            encounterRngSeed,
+            nicheSkipCount,
+            aiRng,
+            completedCombatRoomsBeforeCurrent
+        );
+    }
+
+    public static void Reset(
+        CombatState state,
+        Random rng,
+        ReadOnlySpan<CardInstance> deck,
+        int? encounterId,
+        ReadOnlySpan<int> relicIds,
+        int playerHp,
+        int playerMaxHp,
+        ReadOnlySpan<int> potionIds,
+        int playerGold,
+        bool deckPreShuffled = false,
+        CountingRandom? shuffleRng = null,
+        int? encounterRngSeed = null,
+        int nicheSkipCount = 0,
+        Random? aiRng = null,
+        int completedCombatRoomsBeforeCurrent = -1
+    )
+    {
         state.PlayerMaxHp = Math.Max(1, playerMaxHp);
         state.PlayerHp = Math.Clamp(playerHp, 0, state.PlayerMaxHp);
         state.PlayerGold = Math.Max(0, playerGold);
@@ -264,10 +302,7 @@ public static class CombatFactory
         state.ShuffleRng = shuffleRng;
         state.AiRng = aiRng;
 
-        state.DrawPile = deckIds
-            .ToArray()
-            .Select(id => new CardInstance(Math.Abs(id), id < 0))
-            .ToList();
+        state.DrawPile = deck.ToArray().ToList();
 
         var encounter = encounterId.HasValue
             ? (ActOneEncounter)encounterId.Value

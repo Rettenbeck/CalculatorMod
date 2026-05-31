@@ -140,6 +140,7 @@ class Sts2RunEnv(gym.Env):
         run_offset = native.OBS_SIZE
         phase = int(info_buf[0])
         act = "overgrowth" if int(info_buf[2]) == ACT_OVERGROWTH else "underdocks"
+        map_option_coords = native.run_state_list(self._run_handle, 7, MAP_CHOICES * 2)
         return {
             "phase": phase,
             "floor": int(info_buf[1]),
@@ -168,6 +169,8 @@ class Sts2RunEnv(gym.Env):
                 tuple(
                     {
                         "node_type": int(obs[run_offset + 12 + i]),
+                        "x": int(map_option_coords[i * 2]),
+                        "y": int(map_option_coords[i * 2 + 1]),
                         "encounter": ENCOUNTER_NAMES.get(
                             int(obs[run_offset + 16 + i]),
                             f"unknown-{int(obs[run_offset + 16 + i])}",

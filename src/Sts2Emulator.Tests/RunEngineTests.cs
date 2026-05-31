@@ -781,6 +781,9 @@ public class RunEngineTests
 
         Assert.Equal(0, upgradeStatus);
         Assert.False(upgradeTerminal);
+        Assert.Equal(RunPhase.TransformSelect, upgradeEngine.State.Phase);
+        Assert.Equal(0, upgradeEngine.Step(0, -1, out _, out upgradeTerminal, out _));
+        Assert.False(upgradeTerminal);
         Assert.Equal(RunPhase.Rest, upgradeEngine.State.Phase);
         Assert.Contains(upgradeEngine.State.Deck, card => card.Upgraded);
         Assert.Equal(

@@ -1299,7 +1299,7 @@ public class CombatEngineTests
         CombatEngine.Step(state, 0, new Random(0));
 
         Assert.Equal(5, state.PlayerBlock);
-        Assert.Contains(state.ExhaustPile, card => card.DefId == IC.Havoc);
+        Assert.Contains(state.DiscardPile, card => card.DefId == IC.Havoc);
         Assert.Contains(state.ExhaustPile, card => card.DefId == IC.DefendIronclad);
     }
 

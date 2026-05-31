@@ -46,6 +46,7 @@ public static class RunConstants
     public const int EventDoorsOfLightAndDark = 8;
     public const int EventSunkenTreasury = 9;
     public const int EventByrdonisNest = 10;
+    public const int EventSelfHelpBook = 11;
 
     public const int SlimesWeakEncounterId = 3;
     public const int GremlinMercEncounterId = 7;

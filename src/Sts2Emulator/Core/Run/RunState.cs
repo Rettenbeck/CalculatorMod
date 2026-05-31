@@ -54,6 +54,8 @@ public sealed class RunState
     public bool PendingRelicReward;
     public int ShopRemovalsUsed;
     public int? TransformSelectedDeckIndex;
+    public int PendingSelfHelpBookEnchantType;
+    public bool PendingRestUpgrade;
     public bool RestResultPending;
 }
 

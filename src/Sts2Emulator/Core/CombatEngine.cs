@@ -79,13 +79,13 @@ public static class CombatEngine
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.FreeAttackPower, -1);
         }
 
-        Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+        Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
         if (def.Type == CardType.Attack)
         {
             int oneTwoPunch = BuffSystem.Get(state.PlayerBuffs, BuffId.OneTwoPunch);
             if (oneTwoPunch > 0)
             {
-                Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+                Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
                 if (oneTwoPunch == 1)
                     BuffSystem.Remove(state.PlayerBuffs, BuffId.OneTwoPunch);
                 else
@@ -433,6 +433,10 @@ public static class CombatEngine
         if (def.Type == CardType.Skill && BuffSystem.Get(state.PlayerBuffs, BuffId.Corruption) > 0)
             return 0;
         int cost = def.Cost;
+        if (def.Id == Effects.IC.BodySlam && card.Upgraded)
+            cost -= 1;
+        if (def.Id == Effects.IC.Havoc && card.Upgraded)
+            cost -= 1;
         if (def.Id == Effects.IC.InfernalBlade && card.Upgraded)
             cost -= 1;
         if (def.Id == Effects.IC.Nostalgia && card.Upgraded)
@@ -582,13 +586,13 @@ public static class CombatEngine
             enemyHpsBefore[i] = state.Enemies[i].Hp;
 
         state.Hand.RemoveAt(handIndex);
-        Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+        Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
         if (def.Type == CardType.Attack)
         {
             int oneTwoPunch = BuffSystem.Get(state.PlayerBuffs, BuffId.OneTwoPunch);
             if (oneTwoPunch > 0)
             {
-                Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+                Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
                 if (oneTwoPunch == 1)
                     BuffSystem.Remove(state.PlayerBuffs, BuffId.OneTwoPunch);
                 else
@@ -636,6 +640,8 @@ public static class CombatEngine
 
     private static bool ShouldExhaustAfterPlay(CardDef def, CardInstance card)
     {
+        if (def.Id == Effects.IC.Havoc)
+            return false;
         if (def.Id == Effects.IC.Stampede)
             return false;
         if (def.Id == Effects.CL.Prolong && card.Upgraded)
@@ -664,7 +670,7 @@ public static class CombatEngine
         }
 
         // Apply card effects.
-        Effects.CardEffects.Apply(def, card.Upgraded, state, rng);
+        Effects.CardEffects.Apply(def, card.Upgraded, state, rng, card);
 
         // Resolve status effects (Juggling, Rupture, etc. already handled in Apply or below).
 

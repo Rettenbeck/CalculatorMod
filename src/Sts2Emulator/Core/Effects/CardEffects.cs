@@ -2,7 +2,13 @@ namespace Sts2Emulator.Core.Effects;
 
 public static class CardEffects
 {
-    public static void Apply(CardDef def, bool upgraded, CombatState state, Random rng)
+    public static void Apply(
+        CardDef def,
+        bool upgraded,
+        CombatState state,
+        Random rng,
+        CardInstance card = default
+    )
     {
         switch (def.Id)
         {
@@ -167,9 +173,9 @@ public static class CardEffects
                 DealDamage(state, Dmg(def, upgraded));
                 if (state.DiscardPile.Count > 0)
                 {
-                    var card = state.DiscardPile[^1];
+                    var discardCard = state.DiscardPile[^1];
                     state.DiscardPile.RemoveAt(state.DiscardPile.Count - 1);
-                    state.DrawPile.Insert(0, card);
+                    state.DrawPile.Insert(0, discardCard);
                 }
                 break;
 
@@ -233,7 +239,12 @@ public static class CardEffects
                 break;
 
             case IC.PerfectedStrike: // 2-cost, 6 + 2/3 per Strike card in all piles
-                DealDamage(state, 6 + CountStrikeCards(state) * (upgraded ? 3 : 2));
+                DealDamage(
+                    state,
+                    6
+                        + (CountStrikeCards(state) + (def.Name.Contains("Strike") ? 1 : 0))
+                            * (upgraded ? 3 : 2)
+                );
                 break;
 
             case IC.PommelStrike: // 1-cost, 9/10 dmg + draw 1/2
@@ -245,8 +256,8 @@ public static class CardEffects
             {
                 for (int i = 0; i < state.Hand.Count; i++)
                 {
-                    var card = state.Hand[i];
-                    if (GeneratedData.Cards.Get(card.DefId).Type == CardType.Attack)
+                    var handCard = state.Hand[i];
+                    if (GeneratedData.Cards.Get(handCard.DefId).Type == CardType.Attack)
                         state.Hand[i] = new CardInstance(IC.GiantRock, upgraded);
                 }
                 break;
@@ -277,8 +288,8 @@ public static class CardEffects
             case IC.Stoke: // 1-cost, exhaust hand and add random cards
             {
                 int count = state.Hand.Count;
-                foreach (var card in state.Hand.ToArray())
-                    ExhaustCard(state, card, rng: rng);
+                foreach (var handCard in state.Hand.ToArray())
+                    ExhaustCard(state, handCard, rng: rng);
                 state.Hand.Clear();
                 for (int i = 0; i < count; i++)
                 {
@@ -666,8 +677,11 @@ public static class CardEffects
             default:
                 if (def.Type != CardType.Status && def.Type != CardType.Curse)
                 {
-                    int dmg = upgraded ? def.BaseDamage + def.UpgradeDamage : def.BaseDamage;
-                    int blk = upgraded ? def.BaseBlock + def.UpgradeBlock : def.BaseBlock;
+                    int dmg =
+                        (upgraded ? def.BaseDamage + def.UpgradeDamage : def.BaseDamage)
+                        + card.Sharp;
+                    int blk =
+                        (upgraded ? def.BaseBlock + def.UpgradeBlock : def.BaseBlock) + card.Nimble;
                     if (dmg > 0)
                         DealDamage(state, dmg);
                     if (blk > 0)
@@ -1372,7 +1386,7 @@ public static class CardEffects
             var pile in new[] { state.Hand, state.DrawPile, state.DiscardPile, state.ExhaustPile }
         )
         foreach (var c in pile)
-            if (_strikeNames.Contains(GeneratedData.Cards.Get(c.DefId).Name))
+            if (GeneratedData.Cards.Get(c.DefId).Name.Contains("Strike"))
                 count++;
         return count;
     }

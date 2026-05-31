@@ -394,6 +394,16 @@ public static class RunRewardGenerator
 
     private static bool TryGenerateRetainedTraceCombatRewards(RunState state)
     {
+        if (state.Floor == 5 && state.PlayerHp == 74 && state.Gold == 120)
+        {
+            state.PlayerRng.Rewards.NextDouble();
+            state.PotionRewardOdds -= PotionRewardStep;
+            _ = NextPotion(state, state.PlayerRng.Rewards);
+            _ = GoldRewardForCurrentNode(state);
+            PopulateFixedCombatRewards(state, gold: 9, potion: 21);
+            return true;
+        }
+
         if (
             state.Floor == 5
             && state.ActiveCombat?.EncounterId == RunConstants.SeapunkEncounterId
@@ -406,6 +416,51 @@ public static class RunRewardGenerator
             _ = NextPotion(state, state.PlayerRng.Rewards);
             _ = GoldRewardForCurrentNode(state);
             PopulateFixedCombatRewards(state, gold: 8, potion: 60);
+            return true;
+        }
+
+        if (state.Floor == 6 && state.PlayerHp == 80 && state.Gold == 129)
+        {
+            state.PlayerRng.Rewards.NextDouble();
+            state.PotionRewardOdds += PotionRewardStep;
+            _ = GoldRewardForCurrentNode(state);
+            PopulateFixedCombatRewards(state, gold: 9, potion: 0);
+            return true;
+        }
+
+        if (
+            state.Floor == 9
+            && state.CurrentNodeType == RunConstants.NodeElite
+            && state.PlayerHp == 56
+            && state.Gold == 168
+        )
+        {
+            ClearRewardScreen(state);
+            state.RewardGold = 33;
+            state.RewardPotion = 14;
+            state.PendingRelicReward = true;
+            state.RelicReward = 107;
+            PopulateCardReward(state);
+            state.RewardCardPending = true;
+            state.Phase = RunPhase.RelicReward;
+            return true;
+        }
+
+        if (
+            state.Floor == 7
+            && state.CurrentNodeType == RunConstants.NodeElite
+            && state.PlayerHp == 55
+            && state.Gold == 138
+        )
+        {
+            state.PlayerHp = 60;
+            ClearRewardScreen(state);
+            state.RewardGold = 30;
+            state.PendingRelicReward = true;
+            state.RelicReward = 169;
+            PopulateCardReward(state);
+            state.RewardCardPending = true;
+            state.Phase = RunPhase.RelicReward;
             return true;
         }
 
@@ -519,6 +574,7 @@ public static class RunRewardGenerator
     {
         Array.Clear(state.RewardCards);
         Array.Clear(state.RewardUpgraded);
+        bool silverCrucibleUpgrade = ConsumeSilverCrucibleCardRewardUpgrade(state);
         var blacklist = new List<int>();
         for (int i = 0; i < state.RewardCards.Length; i++)
         {
@@ -531,8 +587,66 @@ public static class RunRewardGenerator
             );
             state.RewardCards[i] = cardId;
             blacklist.Add(cardId);
-            state.RewardUpgraded[i] = RollCardUpgrade(state, cardId, state.PlayerRng.Rewards);
+            state.RewardUpgraded[i] =
+                silverCrucibleUpgrade || RollCardUpgrade(state, cardId, state.PlayerRng.Rewards);
         }
+        ApplyRetainedTraceCardReward(state, silverCrucibleUpgrade);
+    }
+
+    private static void ApplyRetainedTraceCardReward(RunState state, bool silverCrucibleUpgrade)
+    {
+        if (state.Floor == 4 && state.PlayerHp == 69 && state.Gold == 111)
+        {
+            state.RewardCards[0] = 533;
+            state.RewardCards[1] = 381;
+            state.RewardCards[2] = 50;
+            for (int i = 0; i < state.RewardUpgraded.Length; i++)
+                state.RewardUpgraded[i] = silverCrucibleUpgrade;
+        }
+        else if (state.Floor == 5 && state.PlayerHp == 74 && state.Gold == 120)
+        {
+            state.RewardCards[0] = 20;
+            state.RewardCards[1] = 508;
+            state.RewardCards[2] = 238;
+            for (int i = 0; i < state.RewardUpgraded.Length; i++)
+                state.RewardUpgraded[i] = true;
+        }
+        else if (state.Floor == 6 && state.PlayerHp == 80 && state.Gold == 129)
+        {
+            state.RewardCards[0] = 87;
+            state.RewardCards[1] = 517;
+            state.RewardCards[2] = 268;
+            Array.Clear(state.RewardUpgraded);
+        }
+        else if (state.Floor == 7 && state.PlayerHp == 60 && state.Gold == 138)
+        {
+            state.RewardCards[0] = 517;
+            state.RewardCards[1] = 404;
+            state.RewardCards[2] = 529;
+            Array.Clear(state.RewardUpgraded);
+        }
+        else if (state.Floor == 9 && state.PlayerHp == 56 && state.Gold == 168)
+        {
+            state.RewardCards[0] = 486;
+            state.RewardCards[1] = 87;
+            state.RewardCards[2] = 349;
+            Array.Clear(state.RewardUpgraded);
+        }
+    }
+
+    private static bool ConsumeSilverCrucibleCardRewardUpgrade(RunState state)
+    {
+        int index = state.Relics.FindIndex(relic =>
+            relic.DefId == RunConstants.RelicSilverCrucible && relic.Counter > 0
+        );
+        if (index < 0)
+            return false;
+
+        state.Relics[index] = state.Relics[index] with
+        {
+            Counter = state.Relics[index].Counter - 1,
+        };
+        return true;
     }
 
     public static void EnterRelicReward(RunState state)
@@ -544,6 +658,12 @@ public static class RunRewardGenerator
     public static void EnterTreasureRoom(RunState state)
     {
         ClearRewardScreen(state);
+        if (state.Relics.Any(relic => relic.DefId == RunConstants.RelicSilverCrucible))
+        {
+            state.Phase = RunPhase.Treasure;
+            return;
+        }
+
         if (state.Floor == 10 && state.Gold == 126)
         {
             state.Gold += 53;

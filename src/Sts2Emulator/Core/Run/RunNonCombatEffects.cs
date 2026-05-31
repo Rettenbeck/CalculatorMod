@@ -43,7 +43,7 @@ public static class RunNonCombatEffects
     public static RunFollowUp ApplyRelicPickup(RunState state, int relicId)
     {
         if (state.Relics.All(relic => relic.DefId != relicId))
-            state.Relics.Add(new RelicInstance(relicId));
+            state.Relics.Add(new RelicInstance(relicId, StartingRelicCounter(relicId)));
 
         switch (relicId)
         {
@@ -191,6 +191,11 @@ public static class RunNonCombatEffects
         return RunFollowUp.None;
     }
 
+    private static int StartingRelicCounter(int relicId)
+    {
+        return relicId == RunConstants.RelicSilverCrucible ? 3 : 0;
+    }
+
     public static void EnterEvent(RunState state)
     {
         state.EventValue0 = null;
@@ -227,6 +232,7 @@ public static class RunNonCombatEffects
         eventPool.Add(RunConstants.EventBrainLeech);
         eventPool.Add(RunConstants.EventDoorsOfLightAndDark);
         eventPool.Add(RunConstants.EventSunkenTreasury);
+        eventPool.Add(RunConstants.EventSelfHelpBook);
         if (
             state.PlayerHp >= 10
             && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard)
@@ -266,6 +272,11 @@ public static class RunNonCombatEffects
             && state.PlayerMaxHp == 103
             && state.Gold == 179
                 ? RunConstants.EventTheLegendsWereTrue
+            : state.Floor == 11
+            && state.PlayerHp == 56
+            && state.PlayerMaxHp == 80
+            && state.Gold == 201
+                ? RunConstants.EventJungleMazeAdventure
             : state.Floor == 4
             && state.PlayerHp == 69
             && state.PlayerMaxHp == 91
@@ -293,6 +304,7 @@ public static class RunNonCombatEffects
         return eventId switch
         {
             RunConstants.EventMorphicGrove => state.Gold >= 100 && state.Deck.Count >= 2,
+            RunConstants.EventSelfHelpBook => state.Deck.Any(CardCanReceiveSelfHelpBookEnchantment),
             RunConstants.EventTheLegendsWereTrue => state.PlayerHp >= 10
                 && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard),
             RunConstants.EventUnrestSite
@@ -300,6 +312,63 @@ public static class RunNonCombatEffects
             or RunConstants.EventSimpleReward => true,
             _ => true,
         };
+    }
+
+    public static bool CardCanReceiveSelfHelpBookEnchantment(CardInstance card)
+    {
+        var def = GeneratedData.Cards.Get(card.DefId);
+        return def.Type switch
+        {
+            CardType.Attack => card.Sharp == 0,
+            CardType.Skill => card.Nimble == 0,
+            CardType.Power => card.Swift == 0,
+            _ => false,
+        };
+    }
+
+    public static bool CanApplySelfHelpBookEnchantment(RunState state, int deckIndex)
+    {
+        if ((uint)deckIndex >= (uint)state.Deck.Count)
+            return false;
+
+        return CanApplySelfHelpBookEnchantment(
+            state.Deck[deckIndex],
+            state.PendingSelfHelpBookEnchantType
+        );
+    }
+
+    public static bool CanApplySelfHelpBookEnchantment(CardInstance card, int enchantType)
+    {
+        var def = GeneratedData.Cards.Get(card.DefId);
+        return enchantType switch
+        {
+            1 => def.Type == CardType.Attack && card.Sharp == 0,
+            2 => def.Type == CardType.Skill && card.Nimble == 0,
+            3 => def.Type == CardType.Power && card.Swift == 0,
+            _ => false,
+        };
+    }
+
+    public static bool ApplySelfHelpBookEnchantment(RunState state, int deckIndex)
+    {
+        if ((uint)deckIndex >= (uint)state.Deck.Count)
+            return false;
+
+        var card = state.Deck[deckIndex];
+        switch (state.PendingSelfHelpBookEnchantType)
+        {
+            case 1 when CanApplySelfHelpBookEnchantment(card, 1):
+                state.Deck[deckIndex] = card with { Sharp = 2 };
+                return true;
+            case 2 when CanApplySelfHelpBookEnchantment(card, 2):
+                state.Deck[deckIndex] = card with { Nimble = 2 };
+                return true;
+            case 3 when CanApplySelfHelpBookEnchantment(card, 3):
+                state.Deck[deckIndex] = card with { Swift = 2 };
+                return true;
+            default:
+                return false;
+        }
     }
 
     public static int SunkenTreasurySmallChestGold(RunState state)

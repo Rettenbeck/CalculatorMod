@@ -140,6 +140,7 @@ public static class RunNativeExports
             4 => WriteIntArray(run.State.ShopCosts, output),
             5 => WriteBoolArray(run.State.RewardUpgraded, output),
             6 => WriteRewardList(run.State, output),
+            7 => WriteMapOptionCoords(run.State, output),
             _ => -3,
         };
     }
@@ -201,6 +202,19 @@ public static class RunNativeExports
         int count = Math.Min(rewards.Length, output.Length);
         rewards[..count].CopyTo(output);
         return rewards.Length;
+    }
+
+    private static int WriteMapOptionCoords(RunState state, Span<int> output)
+    {
+        int required = RunConstants.MapChoices * 2;
+        int count = Math.Min(required, output.Length);
+        for (int i = 0; i < count / 2; i++)
+        {
+            var coord = state.MapOptionCoords[i];
+            output[i * 2] = coord?.Col ?? -1;
+            output[i * 2 + 1] = coord?.Row ?? -1;
+        }
+        return required;
     }
 
     private static int WriteIntArray(int[] values, Span<int> output)
