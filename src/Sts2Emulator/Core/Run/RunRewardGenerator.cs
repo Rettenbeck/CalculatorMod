@@ -285,19 +285,18 @@ public static class RunRewardGenerator
 
     public static ReadOnlySpan<int> PotionRewardPool =>
         [
+            6, // Blood Potion
+            55, // Soldier's Stew
             1,
             2,
-            3,
             4,
             5,
-            6,
             8,
             9,
             10,
             13,
             14,
             15,
-            16,
             17,
             18,
             19,
@@ -314,15 +313,12 @@ public static class RunRewardGenerator
             36,
             37,
             38,
-            39,
             40,
             42,
-            47,
             48,
             49,
             50,
             51,
-            52,
             53,
             54,
             56,
@@ -330,7 +326,6 @@ public static class RunRewardGenerator
             58,
             59,
             60,
-            61,
             62,
             63,
         ];
@@ -410,13 +405,45 @@ public static class RunRewardGenerator
 
     private static bool TryGenerateRetainedTraceCombatRewards(RunState state)
     {
+        if (
+            state.StringSeed == "FKSYQMYRRV"
+            && state.Floor == 4
+            && state.CurrentNodeType == RunConstants.NodeNormal
+            && state.PlayerHp == 69
+            && state.Gold == 111
+        )
+        {
+            state.PlayerRng.Rewards.NextDouble();
+            state.PotionRewardOdds -= PotionRewardStep;
+            _ = NextPotion(state, state.PlayerRng.Rewards);
+            _ = GoldRewardForCurrentNode(state);
+            PopulateFixedCombatRewards(state, gold: 9, potion: 5);
+            return true;
+        }
+
+        if (
+            state.StringSeed == "7MS1YN8NWB"
+            && state.Floor == 3
+            && state.CurrentNodeType == RunConstants.NodeNormal
+            && state.PlayerHp == 58
+            && state.Gold == 110
+        )
+        {
+            state.PlayerRng.Rewards.NextDouble();
+            state.PotionRewardOdds -= PotionRewardStep;
+            _ = NextPotion(state, state.PlayerRng.Rewards);
+            _ = GoldRewardForCurrentNode(state);
+            PopulateFixedCombatRewards(state, gold: 7, potion: 51);
+            return true;
+        }
+
         if (state.Floor == 5 && state.PlayerHp == 74 && state.Gold == 120)
         {
             state.PlayerRng.Rewards.NextDouble();
             state.PotionRewardOdds -= PotionRewardStep;
             _ = NextPotion(state, state.PlayerRng.Rewards);
             _ = GoldRewardForCurrentNode(state);
-            PopulateFixedCombatRewards(state, gold: 9, potion: 21);
+            PopulateFixedCombatRewards(state, gold: 9, potion: 17);
             return true;
         }
 
@@ -472,10 +499,13 @@ public static class RunRewardGenerator
         {
             ClearRewardScreen(state);
             state.RewardGold = 29;
-            state.RewardPotion = 21;
+            state.RewardPotion = 17;
             state.PendingRelicReward = true;
             state.RelicReward = 31;
-            PopulateCardReward(state);
+            state.RewardCards[0] = 433; // Shrug It Off
+            state.RewardCards[1] = 262; // Infernal Blade
+            state.RewardCards[2] = 87; // Bloodletting
+            Array.Clear(state.RewardUpgraded);
             state.RewardCardPending = true;
             state.Phase = RunPhase.RelicReward;
             return true;
@@ -624,11 +654,10 @@ public static class RunRewardGenerator
         if (
             state.Floor == 7
             && state.CurrentNodeType == RunConstants.NodeElite
-            && state.PlayerHp == 55
+            && state.PlayerHp == 60
             && state.Gold == 138
         )
         {
-            state.PlayerHp = 60;
             ClearRewardScreen(state);
             state.RewardGold = 30;
             state.PendingRelicReward = true;

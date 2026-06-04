@@ -237,6 +237,21 @@ public static class RunNonCombatEffects
 
         eventPool.Add(RunConstants.EventJungleMazeAdventure);
         eventPool.Add(RunConstants.EventBrainLeech);
+        eventPool.Add(RunConstants.EventCrystalSphere);
+        eventPool.Add(RunConstants.EventDollRoom);
+        eventPool.Add(RunConstants.EventFakeMerchant);
+        eventPool.Add(RunConstants.EventPotionCourier);
+        eventPool.Add(RunConstants.EventRanwidTheElder);
+        eventPool.Add(RunConstants.EventRelicTrader);
+        eventPool.Add(RunConstants.EventRoomFullOfCheese);
+        eventPool.Add(RunConstants.EventSlipperyBridge);
+        eventPool.Add(RunConstants.EventStoneOfAllTime);
+        eventPool.Add(RunConstants.EventSymbiote);
+        eventPool.Add(RunConstants.EventTeaMaster);
+        eventPool.Add(RunConstants.EventTheFutureOfPotions);
+        eventPool.Add(RunConstants.EventThisOrThat);
+        eventPool.Add(RunConstants.EventWarHistorianRepy);
+        eventPool.Add(RunConstants.EventWelcomeToWongos);
         eventPool.Add(RunConstants.EventDoorsOfLightAndDark);
         eventPool.Add(RunConstants.EventSunkenTreasury);
         eventPool.Add(RunConstants.EventSelfHelpBook);
@@ -357,6 +372,25 @@ public static class RunNonCombatEffects
             RunConstants.EventSelfHelpBook => state.Deck.Any(CardCanReceiveSelfHelpBookEnchantment),
             RunConstants.EventTheLegendsWereTrue => state.PlayerHp >= 10
                 && state.Deck.Any(card => card.DefId != RunConstants.SpoilsMapCard),
+            RunConstants.EventCrystalSphere => state.Gold >= 100,
+            RunConstants.EventRanwidTheElder => state.Gold >= 100
+                || state.PotionSlots.Any(potion => potion != 0)
+                || state.Relics.Count > 1,
+            RunConstants.EventRelicTrader => state.Relics.Count >= 5,
+            RunConstants.EventStoneOfAllTime => state.PotionSlots.Any(potion => potion != 0)
+                || state.Deck.Any(CardCanReceiveSelfHelpBookEnchantment),
+            RunConstants.EventTeaMaster => state.Gold >= 150,
+            RunConstants.EventTheFutureOfPotions => state.PotionSlots.Count(potion => potion != 0)
+                >= 2,
+            RunConstants.EventWelcomeToWongos => state.Gold >= 100,
+            RunConstants.EventAmalgamator => state.Deck.Count >= 2,
+            RunConstants.EventFieldOfManSizedHoles => state.Deck.Count > 0,
+            RunConstants.EventInfestedAutomaton => state.Deck.Count > 0,
+            RunConstants.EventReflections => state.Deck.Count > 0,
+            RunConstants.EventSpiritGrafter => state.Deck.Count > 0,
+            RunConstants.EventTinkerTime => state.Deck.Count > 0,
+            RunConstants.EventZenWeaver => state.Deck.Any(RunConstants.IsRunCardUpgradable)
+                || state.PlayerHp < state.PlayerMaxHp,
             RunConstants.EventUnrestSite
             or RunConstants.EventAromaOfChaos
             or RunConstants.EventSimpleReward => true,

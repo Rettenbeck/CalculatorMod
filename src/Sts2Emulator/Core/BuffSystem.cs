@@ -155,5 +155,6 @@ public static class BuffSystem
                 or BuffId.Tangled
                 or BuffId.Constrict
                 or BuffId.Smoggy
-                or BuffId.NoBlock;
+                or BuffId.NoBlock
+                or BuffId.Doom;
 }

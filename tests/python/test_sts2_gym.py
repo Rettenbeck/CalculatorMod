@@ -134,6 +134,24 @@ class Sts2GymTests(unittest.TestCase):
         finally:
             env.close()
 
+    def test_run_env_accepts_sts2mcp_style_commands(self):
+        env = Sts2RunEnv(seed="0", max_episode_steps=2)
+        try:
+            obs, info = env.reset()
+            self.assertEqual(info["phase"], PHASE_ANCIENT)
+
+            obs, reward, terminated, truncated, info = env.command(
+                {"action": "choose_event_option", "index": 0},
+            )
+
+            self.assertEqual(int(obs[native.OBS_SIZE]), PHASE_MAP)
+            self.assertEqual(info["phase"], PHASE_MAP)
+            self.assertEqual(reward, 0.0)
+            self.assertFalse(terminated)
+            self.assertFalse(truncated)
+        finally:
+            env.close()
+
     def test_reset_is_deterministic_for_same_seed(self):
         first = Sts2CombatEnv(seed=123)
         second = Sts2CombatEnv(seed=123)

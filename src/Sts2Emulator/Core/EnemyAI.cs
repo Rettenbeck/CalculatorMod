@@ -40,6 +40,7 @@ public static class EnemyAI
                 enemy.MoveIndex++;
             }
 
+            ApplyHighVoltageEndOfEnemyTurn(enemy);
             RestoreTemporaryEnemyStrength(enemy);
             return;
         }
@@ -54,6 +55,62 @@ public static class EnemyAI
                     for (int i = 0; i < 3; i++)
                     {
                         DealAttackDamage(enemy, state, 4);
+                    }
+
+                    break;
+                }
+
+                if (enemy.DefId == KE.Byrdonis && enemy.MoveIndex % 2 == 1)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        DealAttackDamage(enemy, state, 4);
+                    }
+
+                    break;
+                }
+
+                if (enemy.DefId == KE.PhrogParasite && enemy.MoveIndex % 2 == 1)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        DealAttackDamage(enemy, state, 5);
+                    }
+
+                    break;
+                }
+
+                if (enemy.DefId == KE.SkulkingColony && enemy.MoveIndex % 4 == 3)
+                {
+                    DealAttackDamage(enemy, state, 8);
+                    DealAttackDamage(enemy, state, 8);
+                    break;
+                }
+
+                if (
+                    enemy.DefId == KE.TestSubject
+                    && BuffSystem.Get(enemy.Buffs, BuffId.PainfulStabs) > 0
+                )
+                {
+                    int hits = 3 + Math.Max(0, enemy.LastMove);
+                    for (int i = 0; i < hits; i++)
+                    {
+                        DealAttackDamage(enemy, state, 11);
+                    }
+
+                    enemy.LastMove++;
+                    break;
+                }
+
+                if (
+                    enemy.DefId == KE.TestSubject
+                    && BuffSystem.Get(enemy.Buffs, BuffId.Adaptable) == 0
+                    && (enemy.MoveIndex - 4) % 3 == 0
+                )
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        DealAttackDamage(enemy, state, 11);
                     }
 
                     break;
@@ -211,11 +268,39 @@ public static class EnemyAI
                     BuffSystem.Apply(enemy.Buffs, BuffId.SteamEruption, 3);
                 }
 
+                if (
+                    enemy.DefId == KE.TestSubject
+                    && BuffSystem.Get(enemy.Buffs, BuffId.Adaptable) > 0
+                    && BuffSystem.Get(enemy.Buffs, BuffId.PainfulStabs) == 0
+                    && enemy.MoveIndex % 2 == 1
+                )
+                {
+                    BuffSystem.Apply(state.PlayerBuffs, BuffId.Vulnerable, 1);
+                }
+
                 break;
             }
 
             case IntentType.Defend:
+                if (enemy.DefId == KE.Guardbot)
+                {
+                    foreach (
+                        var ally in state.Enemies.Where(e => e.Hp > 0 && e.DefId == KE.Fabricator)
+                    )
+                    {
+                        ally.Block += BuffSystem.IncomingBlock(15, ally.Buffs);
+                    }
+
+                    break;
+                }
+
                 enemy.Block += BuffSystem.IncomingBlock(enemy.CurrentIntent.Magnitude, enemy.Buffs);
+                if (enemy.DefId == KE.Axebot && enemy.MoveIndex % 3 == 0)
+                {
+                    int stock = BuffSystem.Get(enemy.Buffs, BuffId.Stock);
+                    BuffSystem.Apply(enemy.Buffs, BuffId.Strength, Math.Max(0, 2 - stock) * 4);
+                }
+
                 break;
 
             case IntentType.Buff:
@@ -273,7 +358,23 @@ public static class EnemyAI
             }
         }
 
+        ApplyHighVoltageEndOfEnemyTurn(enemy);
         RestoreTemporaryEnemyStrength(enemy);
+    }
+
+    private static void ApplyHighVoltageEndOfEnemyTurn(EnemyState enemy)
+    {
+        int highVoltage = BuffSystem.Get(enemy.Buffs, BuffId.HighVoltage);
+        if (highVoltage > 0)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Strength, highVoltage);
+        }
+
+        int territorial = BuffSystem.Get(enemy.Buffs, BuffId.Territorial);
+        if (territorial > 0)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Strength, territorial);
+        }
     }
 
     private static void RestoreTemporaryEnemyStrength(EnemyState enemy)
@@ -738,6 +839,21 @@ public static class EnemyAI
                 };
 
             case KE.TestSubject:
+                if (BuffSystem.Get(enemy.Buffs, BuffId.PainfulStabs) > 0)
+                {
+                    return new Intent(IntentType.Attack, 11 * (3 + Math.Max(0, enemy.LastMove)));
+                }
+
+                if (BuffSystem.Get(enemy.Buffs, BuffId.Adaptable) == 0)
+                {
+                    return ((enemy.MoveIndex - 4) % 3) switch
+                    {
+                        0 => new Intent(IntentType.Attack, 33),
+                        1 => new Intent(IntentType.Attack, 45),
+                        _ => new Intent(IntentType.Buff, 5),
+                    };
+                }
+
                 return (enemy.MoveIndex % 2) == 0
                     ? new Intent(IntentType.Attack, 22)
                     : new Intent(IntentType.Attack, 16);
@@ -1044,6 +1160,64 @@ public static class EnemyAI
                     ? new Intent(IntentType.Buff, 0)
                     : new Intent(IntentType.Attack, 11);
 
+            case KE.Guardbot:
+                return new Intent(IntentType.Defend, 15);
+
+            case KE.Noisebot:
+                return new Intent(IntentType.Debuff, 2);
+
+            case KE.Stabbot:
+                return new Intent(IntentType.Debuff, 12);
+
+            case KE.Zapbot:
+                return new Intent(IntentType.Attack, 15);
+
+            case KE.ToughEgg:
+                return BuffSystem.Get(enemy.Buffs, BuffId.Hatch) > 0
+                    ? new Intent(IntentType.Buff, 0)
+                    : new Intent(IntentType.Attack, 5);
+
+            case KE.SkulkingColony:
+                return (enemy.MoveIndex % 4) switch
+                {
+                    0 or 1 => new Intent(IntentType.Attack, 16),
+                    2 => new Intent(IntentType.Buff, 11),
+                    _ => new Intent(IntentType.Attack, 16),
+                };
+
+            case KE.TheAdversaryMkOne:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 12),
+                    1 => new Intent(IntentType.Attack, 15),
+                    _ => new Intent(IntentType.Buff, 16),
+                };
+
+            case KE.TheAdversaryMkTwo:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 13),
+                    1 => new Intent(IntentType.Attack, 16),
+                    _ => new Intent(IntentType.Buff, 18),
+                };
+
+            case KE.TheAdversaryMkThree:
+                return (enemy.MoveIndex % 3) switch
+                {
+                    0 => new Intent(IntentType.Attack, 15),
+                    1 => new Intent(IntentType.Attack, 18),
+                    _ => new Intent(IntentType.Buff, 20),
+                };
+
+            case KE.Architect:
+            case KE.BattleFriendV1:
+            case KE.BattleFriendV2:
+            case KE.BattleFriendV3:
+            case KE.Byrdpip:
+            case KE.Osty:
+            case KE.PaelsLegion:
+                return new Intent(IntentType.Unknown, 0);
+
             default:
                 return GeneratedData.Enemies.ChooseIntent(enemy.DefId, enemy.MoveIndex, 0, rng);
         }
@@ -1062,6 +1236,17 @@ public static class EnemyAI
                 enemy.CurrentIntent.Magnitude
             ),
             KE.LivingFog when enemy.MoveIndex % 3 == 0 => new Intent(
+                IntentType.Attack,
+                enemy.CurrentIntent.Magnitude
+            ),
+            KE.Stabbot => new Intent(IntentType.Attack, enemy.CurrentIntent.Magnitude),
+            KE.SkulkingColony when enemy.MoveIndex % 4 == 2 => new Intent(
+                IntentType.Attack,
+                enemy.CurrentIntent.Magnitude
+            ),
+            KE.TheAdversaryMkOne
+            or KE.TheAdversaryMkTwo
+            or KE.TheAdversaryMkThree when enemy.MoveIndex % 3 == 2 => new Intent(
                 IntentType.Attack,
                 enemy.CurrentIntent.Magnitude
             ),
@@ -1282,7 +1467,16 @@ public static class EnemyAI
                 break;
 
             case KE.Entomancer:
-                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, enemy.CurrentIntent.Magnitude);
+                int hive = BuffSystem.Get(enemy.Buffs, BuffId.PersonalHive);
+                if (hive < 3)
+                {
+                    BuffSystem.Apply(enemy.Buffs, BuffId.PersonalHive, 1);
+                    BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 1);
+                }
+                else
+                {
+                    BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                }
                 break;
 
             case KE.InfestedPrism:
@@ -1365,6 +1559,49 @@ public static class EnemyAI
 
             case KE.TwoTailedRat:
                 SummonRatBackup(enemy, state, rng);
+                break;
+
+            case KE.TestSubject:
+                AddStatus(state, ST.Burn, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 3);
+                break;
+
+            case KE.Guardbot:
+                foreach (var ally in state.Enemies.Where(e => e.Hp > 0 && e.DefId == KE.Fabricator))
+                {
+                    ally.Block += BuffSystem.IncomingBlock(15, ally.Buffs);
+                }
+                break;
+
+            case KE.ToughEgg:
+                BuffSystem.Remove(enemy.Buffs, BuffId.Hatch);
+                enemy.Buffs.RemoveAll(buff => buff.Id != BuffId.Minion);
+                int hatchlingHp = rng.Next(20, 24);
+                enemy.Hp = hatchlingHp;
+                enemy.MaxHp = hatchlingHp;
+                break;
+
+            case KE.SkulkingColony:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 3);
+                break;
+
+            case KE.TheAdversaryMkOne:
+                DealAttackDamage(enemy, state, 8);
+                DealAttackDamage(enemy, state, 8);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 2);
+                break;
+
+            case KE.TheAdversaryMkTwo:
+                DealAttackDamage(enemy, state, 9);
+                DealAttackDamage(enemy, state, 9);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 3);
+                break;
+
+            case KE.TheAdversaryMkThree:
+                DealAttackDamage(enemy, state, 10);
+                DealAttackDamage(enemy, state, 10);
+                BuffSystem.Apply(enemy.Buffs, BuffId.Strength, 4);
                 break;
         }
     }
@@ -1567,6 +1804,16 @@ public static class EnemyAI
             case KE.HauntedShip:
                 BuffSystem.Apply(state.PlayerBuffs, BuffId.Weak, 3);
                 AddStatus(state, ST.Dazed, 5);
+                break;
+
+            case KE.Noisebot:
+                AddStatus(state, ST.Dazed, 1);
+                AddStatusToDrawPileRandomly(state, ST.Dazed, 1, rng);
+                break;
+
+            case KE.Stabbot:
+                DealAttackDamage(enemy, state, enemy.CurrentIntent.Magnitude);
+                BuffSystem.Apply(state.PlayerBuffs, BuffId.Frail, 1);
                 break;
         }
     }
@@ -1824,6 +2071,16 @@ public static class EnemyAI
             BuffSystem.Apply(enemy.Buffs, BuffId.Stunned, 1);
         }
 
+        if (defId == KE.ToughEgg)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Hatch, 1);
+        }
+
+        if (defId == KE.Zapbot)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.HighVoltage, 2);
+        }
+
         if (defId == KE.TwoTailedRat)
         {
             BuffSystem.Apply(enemy.Buffs, BuffId.SummonCooldown, 2);
@@ -1856,6 +2113,7 @@ public static class KE
     public const int BruteRubyRaider = 10;
     public const int BygoneEffigy = 11;
     public const int Byrdonis = 12;
+    public const int Byrdpip = 13;
     public const int DecimillipedeSegment = 22;
     public const int Entomancer = 24;
     public const int CrossbowRubyRaider = 18;
@@ -1895,8 +2153,10 @@ public static class KE
     public const int Myte = 55;
     public const int Nibbit = 56;
     public const int Noisebot = 57;
+    public const int Osty = 58;
     public const int Ovicopter = 59;
     public const int OwlMagistrate = 60;
+    public const int PaelsLegion = 61;
     public const int Parafright = 62;
     public const int PhantasmalGardener = 63;
     public const int PhrogParasite = 64;
@@ -1923,6 +2183,9 @@ public static class KE
     public const int Toadpole = 93;
     public const int TorchHeadAmalgam = 94;
     public const int ThievingHopper = 92;
+    public const int TheAdversaryMkOne = 85;
+    public const int TheAdversaryMkThree = 86;
+    public const int TheAdversaryMkTwo = 87;
     public const int TheForgotten = 88;
     public const int TheInsatiable = 89;
     public const int TheLost = 90;

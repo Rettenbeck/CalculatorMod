@@ -46,5 +46,6 @@ public readonly record struct CardInstance(
     bool Retain = false,
     int Sharp = 0,
     int Nimble = 0,
-    int Swift = 0
+    int Swift = 0,
+    int CostForCombat = int.MinValue
 );

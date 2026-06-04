@@ -18,6 +18,17 @@ public sealed class CombatState
     public List<CardInstance> ReturnToHandBeforeDraw = [];
     public List<CardInstance> AutoPlayQueue = [];
 
+    // Defect-style orb queue.
+    public List<OrbState> Orbs = [];
+    public int OrbCapacity = 3;
+
+    // Necrobinder pet state.
+    public int OstyHp;
+    public int OstyMaxHp;
+
+    // Regent star resource.
+    public int Stars;
+
     // Potions: slot index → potion def ID, 0 = empty
     public int[] PotionSlots = new int[3];
     public int MaxPotionSlots = 3;
@@ -53,12 +64,14 @@ public sealed class CombatState
     public bool SkillPlayedWhileSmoggy;
     public int AttackCardsPlayedThisTurn;
     public int AttackOrSkillCardsPlayedThisTurn;
+    public int CardPlaysThisTurn;
     public int CardsPlayedThisCombat;
     public int DrawnCardsSinceAutomationProc;
     public int CardsPlayedSincePanacheProc;
     public int BlockGainsThisTurn;
     public int PlayerHpLostThisTurn;
     public int CardsExhaustedThisTurn;
+    public int LightningOrbsChanneledThisCombat;
     public int EtherealExhaustCount; // number of cards exhausted by Ethereal this turn (Dark Embrace)
     public int UnblockedDamageHitCount; // times player took unblocked damage this combat (TearAsunder)
     public int TargetEnemyIndex = -1; // -1 = auto (first living enemy), >=0 = specific index

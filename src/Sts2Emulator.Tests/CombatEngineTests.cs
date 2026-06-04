@@ -1390,15 +1390,16 @@ public class CombatEngineTests
     }
 
     [Fact]
-    public void Stampede_AutoPlaysRandomAttackWhenPlayPhaseStarts()
+    public void Stampede_AutoPlaysAttackFromRemainingHandAtEndOfTurn()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Hand = [new CardInstance(IC.Stampede, false)];
-        state.DrawPile =
+        state.Hand =
         [
-            new CardInstance(IC.StrikeIronclad, false),
+            new CardInstance(IC.Stampede, false),
+            new CardInstance(IC.HowlFromBeyond, false),
             new CardInstance(IC.DefendIronclad, false),
         ];
+        state.DrawPile.Clear();
         state.DiscardPile.Clear();
         state.Energy = 2;
         state.Enemies =
@@ -1414,26 +1415,23 @@ public class CombatEngineTests
         ];
 
         CombatEngine.Step(state, 0, new Random(0));
-        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 2, new Random(0));
 
-        Assert.Equal(24, state.Enemies[0].Hp);
-        Assert.Equal(1, state.AttackCardsPlayedThisTurn);
-        Assert.Equal([IC.DefendIronclad], state.Hand.Select(card => card.DefId));
-        Assert.Contains(state.DiscardPile, card => card.DefId == IC.StrikeIronclad);
+        Assert.Equal(14, state.Enemies[0].Hp);
     }
 
     [Fact]
     public void Stampede_RepeatsForStackCountAndSkipsUnplayableCards()
     {
         var state = CombatFactory.NewCombat(seed: 0);
-        state.Hand.Clear();
-        state.DrawPile =
+        state.Hand =
         [
             new CardInstance(IC.StrikeIronclad, false),
             new CardInstance(IC.AscendersBane, false),
             new CardInstance(IC.StrikeIronclad, false),
             new CardInstance(IC.DefendIronclad, false),
         ];
+        state.DrawPile.Clear();
         state.DiscardPile.Clear();
         state.PlayerBuffs = [new BuffState(BuffId.Stampede, 2)];
         state.Enemies =
@@ -1448,12 +1446,9 @@ public class CombatEngineTests
             },
         ];
 
-        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, state.Hand.Count, new Random(0));
 
         Assert.Equal(38, state.Enemies[0].Hp);
-        Assert.Equal(2, state.AttackCardsPlayedThisTurn);
-        Assert.Equal([IC.AscendersBane, IC.DefendIronclad], state.Hand.Select(card => card.DefId));
-        Assert.Equal(2, state.DiscardPile.Count(card => card.DefId == IC.StrikeIronclad));
     }
 
     [Fact]
@@ -2823,6 +2818,467 @@ public class CombatEngineTests
         EnemyAI.ExecuteIntent(state.Enemies[0], state, new Random(0));
 
         Assert.Equal(6, state.Enemies.Count(e => e.DefId == 101));
+    }
+
+    [Fact]
+    public void FabricatorBots_UseDecompiledLoopingMoves()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerBlock = 0;
+        state.PlayerHp = 64;
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        var fabricator = new EnemyState
+        {
+            DefId = KE.Fabricator,
+            Hp = 50,
+            MaxHp = 50,
+            CurrentIntent = new Intent(IntentType.Attack, 0),
+            Buffs = [],
+        };
+        state.Enemies =
+        [
+            fabricator,
+            new EnemyState
+            {
+                DefId = KE.Guardbot,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Defend, 15),
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = KE.Noisebot,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Debuff, 2),
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = KE.Stabbot,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Debuff, 12),
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = KE.Zapbot,
+                Hp = 20,
+                MaxHp = 20,
+                CurrentIntent = new Intent(IntentType.Attack, 15),
+                Buffs = [new BuffState(BuffId.HighVoltage, 2)],
+            },
+        ];
+
+        EnemyAI.ExecuteIntent(state.Enemies[1], state, new Random(0));
+        EnemyAI.ExecuteIntent(state.Enemies[2], state, new Random(0));
+        EnemyAI.ExecuteIntent(state.Enemies[3], state, new Random(0));
+        EnemyAI.ExecuteIntent(state.Enemies[4], state, new Random(0));
+
+        Assert.Equal(15, fabricator.Block);
+        Assert.Equal(
+            2,
+            state.DiscardPile.Count(c => c.DefId == ST.Dazed)
+                + state.DrawPile.Count(c => c.DefId == ST.Dazed)
+        );
+        Assert.Equal(1, BuffSystem.Get(state.PlayerBuffs, BuffId.Frail));
+        Assert.Equal(37, state.PlayerHp);
+        Assert.Equal(2, BuffSystem.Get(state.Enemies[4].Buffs, BuffId.Strength));
+    }
+
+    [Fact]
+    public void ToughEgg_HatchesThenLoopsNibble()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 64;
+        var egg = new EnemyState
+        {
+            DefId = KE.ToughEgg,
+            Hp = 16,
+            MaxHp = 16,
+            CurrentIntent = new Intent(IntentType.Buff, 0),
+            Buffs = [new BuffState(BuffId.Hatch, 1), new BuffState(BuffId.Minion, 1)],
+        };
+
+        EnemyAI.ExecuteIntent(egg, state, new Random(0));
+        EnemyAI.ChooseIntents([egg], 0, new Random(0));
+        EnemyAI.ExecuteIntent(egg, state, new Random(0));
+
+        Assert.Equal(0, BuffSystem.Get(egg.Buffs, BuffId.Hatch));
+        Assert.Equal(1, BuffSystem.Get(egg.Buffs, BuffId.Minion));
+        Assert.InRange(egg.MaxHp, 20, 23);
+        Assert.Equal(IntentType.Attack, egg.CurrentIntent.Type);
+        Assert.Equal(59, state.PlayerHp);
+    }
+
+    [Fact]
+    public void SkulkingColony_MatchesDecompiledMoveCycle()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerHp = 100;
+        state.PlayerBlock = 999;
+        var colony = new EnemyState
+        {
+            DefId = KE.SkulkingColony,
+            Hp = 80,
+            MaxHp = 80,
+            CurrentIntent = new Intent(IntentType.Attack, 16),
+            Buffs = [new BuffState(BuffId.HardenedShell, 20)],
+        };
+
+        EnemyAI.ExecuteIntent(colony, state, new Random(0));
+        EnemyAI.ChooseIntents([colony], 0, new Random(0));
+        EnemyAI.ExecuteIntent(colony, state, new Random(0));
+        EnemyAI.ChooseIntents([colony], 0, new Random(0));
+        EnemyAI.ExecuteIntent(colony, state, new Random(0));
+        EnemyAI.ChooseIntents([colony], 0, new Random(0));
+        EnemyAI.ExecuteIntent(colony, state, new Random(0));
+
+        Assert.Equal(999 - 16 - 16 - 11 - 11 - 11, state.PlayerBlock);
+        Assert.Equal(3, BuffSystem.Get(colony.Buffs, BuffId.Strength));
+    }
+
+    [Fact]
+    public void AdversaryVariants_UseBarrageAttackAndStrengthMove()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.PlayerBlock = 999;
+        var mkThree = new EnemyState
+        {
+            DefId = KE.TheAdversaryMkThree,
+            Hp = 300,
+            MaxHp = 300,
+            CurrentIntent = new Intent(IntentType.Buff, 20),
+            Buffs = [new BuffState(BuffId.Artifact, 2)],
+            MoveIndex = 2,
+        };
+
+        EnemyAI.ExecuteIntent(mkThree, state, new Random(0));
+
+        Assert.Equal(999 - 10 - 10, state.PlayerBlock);
+        Assert.Equal(4, BuffSystem.Get(mkThree.Buffs, BuffId.Strength));
+    }
+
+    [Fact]
+    public void Axebot_StockRespawnsBeforeCombatCanEnd()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = KE.Axebot,
+                Hp = 1,
+                MaxHp = 76,
+                CurrentIntent = new Intent(IntentType.Attack, 14),
+                Buffs = [new BuffState(BuffId.Stock, 2)],
+                MoveIndex = 2,
+            },
+        ];
+
+        var result = CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.False(result.Terminal);
+        Assert.InRange(state.Enemies[0].Hp, 76, 86);
+        Assert.Equal(1, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Stock));
+        Assert.Equal(IntentType.Defend, state.Enemies[0].CurrentIntent.Type);
+    }
+
+    [Fact]
+    public void PhrogParasite_InfestedSpawnsWrigglersBeforeCombatCanEnd()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = KE.PhrogParasite,
+                Hp = 1,
+                MaxHp = 66,
+                CurrentIntent = new Intent(IntentType.Debuff, 3),
+                Buffs = [new BuffState(BuffId.Infested, 4)],
+            },
+        ];
+
+        var result = CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.False(result.Terminal);
+        Assert.Equal(4, state.Enemies.Count(enemy => enemy.DefId == KE.Wriggler));
+        Assert.All(
+            state.Enemies.Where(enemy => enemy.DefId == KE.Wriggler),
+            enemy => Assert.Equal(1, BuffSystem.Get(enemy.Buffs, BuffId.Stunned))
+        );
+    }
+
+    [Fact]
+    public void TestSubject_AdaptableRespawnsThroughSecondAndThirdForms()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = KE.TestSubject,
+                Hp = 1,
+                MaxHp = 111,
+                CurrentIntent = new Intent(IntentType.Attack, 22),
+                Buffs = [new BuffState(BuffId.Adaptable, 1)],
+            },
+        ];
+
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.Energy = 3;
+        var first = CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.False(first.Terminal);
+        Assert.Equal(212, state.Enemies[0].Hp);
+        Assert.Equal(1, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.PainfulStabs));
+
+        state.Enemies[0].Hp = 1;
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.Energy = 3;
+        var second = CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.False(second.Terminal);
+        Assert.Equal(313, state.Enemies[0].Hp);
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Adaptable));
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.PainfulStabs));
+        Assert.Equal(1, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Intangible));
+    }
+
+    [Fact]
+    public void Slow_IncreasesPoweredAttackDamageAfterEachPlayedCard()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand =
+        [
+            new CardInstance(IC.DefendIronclad, false),
+            new CardInstance(IC.StrikeIronclad, false),
+        ];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = KE.BygoneEffigy,
+                Hp = 132,
+                MaxHp = 132,
+                CurrentIntent = new Intent(IntentType.Unknown, 0),
+                Buffs = [new BuffState(BuffId.Slow, 1)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(126, state.Enemies[0].Hp);
+        Assert.Equal(2, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.SlowCount));
+    }
+
+    [Fact]
+    public void TerritorialAndHighVoltage_GainStrengthAtEnemyTurnEnd()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var byrdonis = new EnemyState
+        {
+            DefId = KE.Byrdonis,
+            Hp = 90,
+            MaxHp = 90,
+            CurrentIntent = new Intent(IntentType.Attack, 19),
+            Buffs = [new BuffState(BuffId.Territorial, 1)],
+        };
+        state.Enemies = [byrdonis];
+
+        EnemyAI.ExecuteIntent(byrdonis, state, new Random(0));
+
+        Assert.Equal(1, BuffSystem.Get(byrdonis.Buffs, BuffId.Strength));
+    }
+
+    [Fact]
+    public void Byrdonis_PeckDealsThreeStrengthModifiedHits()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var byrdonis = new EnemyState
+        {
+            DefId = KE.Byrdonis,
+            Hp = 90,
+            MaxHp = 90,
+            MoveIndex = 1,
+            CurrentIntent = new Intent(IntentType.Attack, 12),
+            Buffs = [new BuffState(BuffId.Strength, 1)],
+        };
+        state.Enemies = [byrdonis];
+        state.PlayerHp = 66;
+        state.PlayerBlock = 5;
+
+        EnemyAI.ExecuteIntent(byrdonis, state, new Random(0));
+
+        Assert.Equal(56, state.PlayerHp);
+    }
+
+    [Fact]
+    public void BlockPotion_GainsTwelveBlock()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+
+        PotionEffects.Apply(5, state);
+
+        Assert.Equal(12, state.PlayerBlock);
+    }
+
+    [Fact]
+    public void ShacklingPotion_AppliesTemporaryStrengthLossToAllEnemies()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [],
+            },
+            new EnemyState
+            {
+                DefId = 16,
+                Hp = 30,
+                MaxHp = 30,
+                Buffs = [new BuffState(BuffId.Artifact, 1)],
+            },
+        ];
+
+        PotionEffects.Apply(51, state);
+
+        Assert.Equal(-7, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.Strength));
+        Assert.Equal(7, BuffSystem.Get(state.Enemies[0].Buffs, BuffId.TemporaryStrength));
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[1].Buffs, BuffId.Artifact));
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[1].Buffs, BuffId.Strength));
+        Assert.Equal(0, BuffSystem.Get(state.Enemies[1].Buffs, BuffId.TemporaryStrength));
+    }
+
+    [Fact]
+    public void PhrogParasite_LashDealsFourStrengthModifiedHits()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        var phrog = new EnemyState
+        {
+            DefId = KE.PhrogParasite,
+            Hp = 67,
+            MaxHp = 67,
+            MoveIndex = 1,
+            CurrentIntent = new Intent(IntentType.Attack, 20),
+            Buffs = [],
+        };
+        state.Enemies = [phrog];
+        state.PlayerHp = 63;
+        state.PlayerBlock = 0;
+
+        PotionEffects.Apply(51, state);
+        EnemyAI.ExecuteIntent(phrog, state, new Random(0));
+
+        Assert.Equal(63, state.PlayerHp);
+        Assert.Equal(0, BuffSystem.Get(phrog.Buffs, BuffId.Strength));
+        Assert.Equal(0, BuffSystem.Get(phrog.Buffs, BuffId.TemporaryStrength));
+    }
+
+    [Fact]
+    public void StoneCracker_UpgradesTwoCardsBeforeOpeningDraw()
+    {
+        var state = new CombatState();
+        var deck = new CardInstance[]
+        {
+            new(IC.StrikeIronclad, false),
+            new(IC.DefendIronclad, false),
+            new(IC.Bash, false),
+            new(IC.AscendersBane, false),
+        };
+
+        CombatFactory.Reset(
+            state,
+            new Random(0),
+            deck,
+            encounterId: 2,
+            relicIds: [RelicEffects.StoneCracker],
+            playerHp: 80,
+            playerMaxHp: 80,
+            potionIds: [],
+            playerGold: 0,
+            deckPreShuffled: true
+        );
+
+        int upgradedCount = state.Hand.Concat(state.DrawPile).Count(card => card.Upgraded);
+        Assert.Equal(2, upgradedCount);
+        Assert.DoesNotContain(
+            state.Hand.Concat(state.DrawPile),
+            card => card.DefId == IC.AscendersBane && card.Upgraded
+        );
+    }
+
+    [Fact]
+    public void PersonalHive_AddsDazedWhenEntomancerTakesPoweredAttackDamage()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.StrikeIronclad, false)];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 3;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = KE.Entomancer,
+                Hp = 155,
+                MaxHp = 155,
+                CurrentIntent = new Intent(IntentType.Attack, 24),
+                Buffs = [new BuffState(BuffId.PersonalHive, 1)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Single(state.DrawPile, card => card.DefId == ST.Dazed);
+    }
+
+    [Fact]
+    public void Galvanic_DamagesPlayerWhenPowerCardIsPlayed()
+    {
+        var state = CombatFactory.NewCombat(seed: 0);
+        state.Hand = [new CardInstance(IC.Inflame, false)];
+        state.DrawPile.Clear();
+        state.DiscardPile.Clear();
+        state.Energy = 3;
+        state.PlayerHp = 64;
+        state.Enemies =
+        [
+            new EnemyState
+            {
+                DefId = KE.GlobeHead,
+                Hp = 158,
+                MaxHp = 158,
+                CurrentIntent = new Intent(IntentType.Attack, 21),
+                Buffs = [new BuffState(BuffId.Galvanic, 6)],
+            },
+        ];
+
+        CombatEngine.Step(state, 0, new Random(0));
+
+        Assert.Equal(58, state.PlayerHp);
     }
 
     [Fact]

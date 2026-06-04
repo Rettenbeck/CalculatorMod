@@ -9,38 +9,40 @@ import numpy as np
 from gymnasium import spaces
 
 from . import native
+from . import run_constants as constants
+from .commands import execute_command
 from .env import ENCOUNTER_NAMES
 
-REWARD_SKIP_ACTION = 3
-SHOP_SKIP_ACTION = 14
-EVENT_SKIP_ACTION = 3
-MAP_CHOICES = 4
-RUN_OBS_SIZE = native.RUN_OBS_SIZE
-RUN_MAX_EPISODE_STEPS = 1000
+REWARD_SKIP_ACTION = constants.REWARD_SKIP_ACTION
+SHOP_SKIP_ACTION = constants.SHOP_SKIP_ACTION
+EVENT_SKIP_ACTION = constants.EVENT_SKIP_ACTION
+MAP_CHOICES = constants.MAP_CHOICES
+RUN_OBS_SIZE = constants.RUN_OBS_SIZE
+RUN_MAX_EPISODE_STEPS = constants.RUN_MAX_EPISODE_STEPS
 
-PHASE_COMBAT = 0
-PHASE_CARD_REWARD = 1
-PHASE_MAP = 2
-PHASE_REST = 3
-PHASE_SHOP = 4
-PHASE_RELIC_REWARD = 5
-PHASE_COMPLETE = 6
-PHASE_EVENT = 7
-PHASE_ANCIENT = 8
-PHASE_TRANSFORM_SELECT = 9
-PHASE_TREASURE = 10
+PHASE_COMBAT = constants.PHASE_COMBAT
+PHASE_CARD_REWARD = constants.PHASE_CARD_REWARD
+PHASE_MAP = constants.PHASE_MAP
+PHASE_REST = constants.PHASE_REST
+PHASE_SHOP = constants.PHASE_SHOP
+PHASE_RELIC_REWARD = constants.PHASE_RELIC_REWARD
+PHASE_COMPLETE = constants.PHASE_COMPLETE
+PHASE_EVENT = constants.PHASE_EVENT
+PHASE_ANCIENT = constants.PHASE_ANCIENT
+PHASE_TRANSFORM_SELECT = constants.PHASE_TRANSFORM_SELECT
+PHASE_TREASURE = constants.PHASE_TREASURE
 
-NODE_NONE = 0
-NODE_NORMAL = 1
-NODE_ELITE = 2
-NODE_REST = 3
-NODE_SHOP = 4
-NODE_RELIC = 5
-NODE_BOSS = 6
-NODE_EVENT = 7
+NODE_NONE = constants.NODE_NONE
+NODE_NORMAL = constants.NODE_NORMAL
+NODE_ELITE = constants.NODE_ELITE
+NODE_REST = constants.NODE_REST
+NODE_SHOP = constants.NODE_SHOP
+NODE_RELIC = constants.NODE_RELIC
+NODE_BOSS = constants.NODE_BOSS
+NODE_EVENT = constants.NODE_EVENT
 
-ACT_OVERGROWTH = 1
-ACT_UNDERDOCKS = 2
+ACT_OVERGROWTH = constants.ACT_OVERGROWTH
+ACT_UNDERDOCKS = constants.ACT_UNDERDOCKS
 
 
 class Sts2RunEnv(gym.Env):
@@ -113,6 +115,18 @@ class Sts2RunEnv(gym.Env):
             truncated,
             self._info(),
         )
+
+    def command(self, payload: dict, *, target_map=None, reference_step=None):
+        """Execute an STS2MCP-style command through the integer action API."""
+        reward, terminated, truncated, obs, info = execute_command(
+            self,
+            payload,
+            self._obs(),
+            self._info(),
+            target_map=target_map,
+            reference_step=reference_step,
+        )
+        return obs, reward, terminated, truncated, info
 
     def action_masks(self) -> np.ndarray:
         if self._run_handle is None:

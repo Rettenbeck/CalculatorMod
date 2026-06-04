@@ -44,6 +44,7 @@
   - Close the running Slay the Spire 2 instance, if it is running.
   - Copy over the DLL files to this directory: `C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2\mods`-
 - If you need to make a trace from an in-game replay, you can use the `start_replay` API that we added to STS2MCP.
+- The root STS2MCP URL (`http://localhost:15526/`) is only a health check. Use `http://localhost:15526/api/v1/singleplayer` for singleplayer state and actions, including replay control commands such as `start_replay`, `get_replay_status`, and `cancel_replay`.
 
 ## Slay the Spire 2 Launch Instructions
 

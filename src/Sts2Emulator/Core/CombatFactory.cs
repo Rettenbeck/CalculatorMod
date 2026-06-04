@@ -333,6 +333,8 @@ public static class CombatFactory
             CardEffects.ShufflePile(state.DrawPile, rng);
         }
 
+        RelicEffects.ApplyBeforeOpeningHand(state, rng);
+
         for (int i = 0; i < 5 && state.DrawPile.Count > 0; i++)
         {
             state.Hand.Add(state.DrawPile[0]);
@@ -1202,7 +1204,7 @@ public static class CombatFactory
         {
             hp = rng.Next(def.MinHp, def.MaxHp + 1);
         }
-        return new EnemyState
+        var enemy = new EnemyState
         {
             DefId = defId,
             Hp = hp,
@@ -1212,6 +1214,61 @@ public static class CombatFactory
             Buffs = [],
             MoveIndex = moveIndex,
         };
+        ApplyIntrinsicEnemyPowers(enemy);
+        return enemy;
+    }
+
+    private static void ApplyIntrinsicEnemyPowers(EnemyState enemy)
+    {
+        if (enemy.DefId == KE.ToughEgg)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Hatch, 1);
+        }
+
+        if (enemy.DefId == KE.Axebot)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Stock, 2);
+        }
+
+        if (enemy.DefId == KE.BygoneEffigy)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Slow, 1);
+        }
+
+        if (enemy.DefId == KE.Byrdonis)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Territorial, 1);
+        }
+
+        if (enemy.DefId == KE.Entomancer)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.PersonalHive, 1);
+        }
+
+        if (enemy.DefId == KE.GlobeHead)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Galvanic, 6);
+        }
+
+        if (enemy.DefId == KE.LivingShield)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Rampart, 25);
+        }
+
+        if (enemy.DefId == KE.LouseProgenitor)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.CurlUp, 18);
+        }
+
+        if (enemy.DefId == KE.PhrogParasite)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.Infested, 4);
+        }
+
+        if (enemy.DefId == KE.Zapbot)
+        {
+            BuffSystem.Apply(enemy.Buffs, BuffId.HighVoltage, 2);
+        }
     }
 
     private static EnemyState CreateFossilStalker(Random rng)

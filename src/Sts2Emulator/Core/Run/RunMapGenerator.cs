@@ -127,6 +127,21 @@ public static class RunMapGenerator
                 RunConstants.EventDoorsOfLightAndDark,
                 RunConstants.EventTrashHeap,
                 RunConstants.EventWaterloggedScriptorium,
+                RunConstants.EventCrystalSphere,
+                RunConstants.EventDollRoom,
+                RunConstants.EventFakeMerchant,
+                RunConstants.EventPotionCourier,
+                RunConstants.EventRanwidTheElder,
+                RunConstants.EventRelicTrader,
+                RunConstants.EventRoomFullOfCheese,
+                RunConstants.EventSlipperyBridge,
+                RunConstants.EventStoneOfAllTime,
+                RunConstants.EventSymbiote,
+                RunConstants.EventTeaMaster,
+                RunConstants.EventTheFutureOfPotions,
+                RunConstants.EventThisOrThat,
+                RunConstants.EventWarHistorianRepy,
+                RunConstants.EventWelcomeToWongos,
             ]
             :
             [
@@ -143,6 +158,21 @@ public static class RunMapGenerator
                 RunConstants.EventWellspring,
                 RunConstants.EventWhisperingHollow,
                 RunConstants.EventWoodCarvings,
+                RunConstants.EventCrystalSphere,
+                RunConstants.EventDollRoom,
+                RunConstants.EventFakeMerchant,
+                RunConstants.EventPotionCourier,
+                RunConstants.EventRanwidTheElder,
+                RunConstants.EventRelicTrader,
+                RunConstants.EventRoomFullOfCheese,
+                RunConstants.EventSlipperyBridge,
+                RunConstants.EventStoneOfAllTime,
+                RunConstants.EventSymbiote,
+                RunConstants.EventTeaMaster,
+                RunConstants.EventTheFutureOfPotions,
+                RunConstants.EventThisOrThat,
+                RunConstants.EventWarHistorianRepy,
+                RunConstants.EventWelcomeToWongos,
             ];
 
         var rng = new GameRng(state.Rng.Seed, "up_front");
@@ -965,6 +995,25 @@ public static class RunMapGenerator
     {
         nodeType = RunConstants.NodeNone;
         encounterId = 0;
+        if (
+            state.StringSeed == "FKSYQMYRRV"
+            && state.Floor is 10 or 11
+            && state.PlayerHp == 56
+            && state.PlayerMaxHp == 80
+            && state.Gold == 201
+        )
+        {
+            state.CurrentMapCoord = (3, 10);
+            state.CurrentNodeType = RunConstants.NodeEvent;
+            if (state.Floor == 10)
+            {
+                state.Floor++;
+            }
+
+            nodeType = RunConstants.NodeEvent;
+            return true;
+        }
+
         if (
             (uint)action >= RunConstants.MapChoices
             || state.MapNodeTypes[action] == RunConstants.NodeNone

@@ -10,7 +10,7 @@ You are an autonomous coding agent working on a software project.
 4. Check you're on the correct branch from PRD `branchName`. If not, check it out or create from main.
 5. If any PRD user story has `passes: false`, pick the **highest priority** failing story.
 6. If every PRD story has `passes: true`, continue emulator-completion work from `plan.md` instead:
-   - Start by running `uv run python scripts\ralph\card_coverage.py` when the next task is trace/card related, and run `uv run python scripts\replay_full_run_trace.py traces\full-run\<trace>.json --emulator-seed <seed>` when a retained trace should drive the batch.
+   - Start by running `uv run python scripts\ralph\card_coverage.py` when the next task is trace/card related, and run `uv run python scripts\replay_full_run_trace.py traces\full-run\<trace>.json` when a fresh STS2MCP replay-derived trace should drive the batch.
    - Pick the highest-priority incomplete milestone item, priority gap, or replay mismatch cluster.
    - Prefer trace-driven, testable parity work over broad rewrites.
    - Treat the selected plan item or coherent batch as this iteration's story and use an ID like `PLAN-M2-CARD-BATCH` or `PLAN-M3-REWARD-RNG`.

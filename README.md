@@ -32,6 +32,11 @@ src\Sts2Emulator
 
 The Python environment calls the native library in-process, avoiding sockets or serialization overhead.
 
+`Sts2RunEnv` exposes two input layers:
+
+- `env.step(action, target=-1)` is the low-level Gymnasium API used by RL training. The integer action is phase-dependent and is paired with `env.action_masks()`.
+- `env.command(payload)` accepts STS2MCP-style command payloads such as `{"action": "play_card", "card_index": 0}` or `{"action": "choose_map_node", "index": 1}` and translates them to the integer action API. Replay and parity tooling should prefer this command layer so fresh STS2MCP `.replay` files exercise the same command shape used by the game mod.
+
 ### What belongs where
 
 The emulator has two layers with distinct responsibilities: C# owns canonical deterministic game state and Python owns reinforcement-learning integration.
@@ -165,7 +170,7 @@ Capture a full-run trace from a running Slay the Spire 2 instance with STS2MCP e
 uv run python scripts\trace_real_game_run.py FULLRUN_SEED --abandon-existing --output traces\full-run\FULLRUN_SEED.json
 ```
 
-Generated full-run captures are ignored by default because they are large and usually superseded quickly. Keep only curated trace fixtures in `traces\full-run` when a trace documents a durable parity milestone or regression case.
+Generated full-run captures are ignored by default because they are large and usually superseded quickly. Prefer fresh STS2MCP replay-derived traces for parity work; do not keep obsolete traces after the emulator has moved past them.
 
 Start a new real-game standard run with a specific seed through STS2MCP before tracing:
 

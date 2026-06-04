@@ -1,5 +1,7 @@
 namespace Sts2Emulator.Core.Effects;
 
+using Run;
+
 public static class RelicEffects
 {
     public const int Anchor = 4;
@@ -15,8 +17,31 @@ public static class RelicEffects
     public const int OddlySmoothStone = 169;
     public const int Orichalcum = 172;
     public const int RedSkull = 215;
+    public const int StoneCracker = 249;
     public const int VenerableTeaSetActive = 100282;
     public const int Vajra = 279;
+
+    public static void ApplyBeforeOpeningHand(CombatState state, Random rng)
+    {
+        if (!HasRelic(state, StoneCracker))
+        {
+            return;
+        }
+
+        var upgradableIndices = state
+            .DrawPile.Select((card, index) => (card, index))
+            .Where(item => RunConstants.IsRunCardUpgradable(item.card))
+            .Select(item => item.index)
+            .ToList();
+
+        for (int i = 0; i < 2 && upgradableIndices.Count > 0; i++)
+        {
+            int selected = rng.Next(upgradableIndices.Count);
+            int drawPileIndex = upgradableIndices[selected];
+            state.DrawPile[drawPileIndex] = state.DrawPile[drawPileIndex] with { Upgraded = true };
+            upgradableIndices.RemoveAt(selected);
+        }
+    }
 
     public static void ApplyCombatStart(CombatState state, Random rng)
     {
