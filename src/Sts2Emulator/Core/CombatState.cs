@@ -2,6 +2,8 @@ namespace Sts2Emulator.Core;
 
 public sealed class CombatState
 {
+	public string TimeStamp = "";
+	
     // Player
     public int PlayerHp;
     public int PlayerMaxHp;
